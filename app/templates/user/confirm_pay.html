@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+
+{%with messages = get_flashed_messages()%}
+{%if messages %}
+    <script type="text/javascript">
+        alert("{{messages[-1]}}");
+    </script>
+{%endif%}
+{%endwith%}
+
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 180px;">
+    <br>
+
+    <h5 class="my-1 border pb-2 pt-2 text-center">
+        <br>
+        결제가 완료되었습니다.
+        <br>
+        "메인메뉴" > "예약 확인"에서 <br>
+        회원님의 예약 내역 확인 가능
+        <br>
+        <br>
+        "메인메뉴" > "예약 확인" > "입장" 버튼을 <br>
+        누르시면 QR코드를 확인할 수 있습니다.
+        <br>
+        주식회사 볼랩
+    </h5>
+    <br>
+
+    <div class="d-grid gap-2">
+        <a class="btn btn-primary" href="{{ url_for('main.user_menu', email=user.email) }}">
+            확 인
+        </a>
+    </div>
+
+
+</div>
+
+{% endblock %}

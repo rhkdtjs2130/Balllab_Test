@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+    $('.checkbox_limit').on('change', function() {
+    if($('.checkbox_limit:checked').length > 2) {
+        this.checked = false;
+    }
+    });
+</script>
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h5 class="my-1 border-bottom pb-2 pt-2 text-center">
+        이용하실 시간을 선택해주세요.
+    </h5>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="d-grid gap-2 my-3">
+
+            {% for i in range(0, timetable|length) %}
+                {% if i in court_info %}
+                    <input type="checkbox" class="btn-check my-1 checkbox_limit" disabled name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <label class="btn btn-outline-danger" for={{ timetable[i]}}>{{ timetable[i] }}</label>
+                {% else %}
+                    <input type="checkbox" class="btn-check my-1 checkbox_limit" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <label class="btn btn-outline-secondary" for={{ timetable[i]}}>{{ timetable[i] }}</label>
+                {% endif %}
+            {% endfor %}
+
+        </div>
+
+        <div class="d-grid gap-2 mb-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+                확 인
+            </button>
+        </div>
+    </form>
+
+
+</div>
+
+{% endblock %}

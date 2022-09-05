@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+    $('.checkbox_limit').on('change', function() {
+    if($('.checkbox_limit:checked').length > 2) {
+        this.checked = false;
+    }
+    });
+</script>
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
+        <b>예약 확인</b>
+    </h5>
+
+    <div class="mx-1">
+        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 400px"  data-bs-spy="scroll">
+            {% if reservation_table|length !=0 %}
+                {% for reservation in reservation_table %}
+                    <div class="border p-3 rounded-start bg-light">
+                        <div>
+                            <h4 style="color: mediumslateblue;">
+                                <b>
+                                    {{ reservation.area }}
+                                </b>
+                            </h4>
+
+                            <h5 style="color: green;">
+                                <b>
+                                    {{ timetable[reservation.time|int] }}
+                                </b>
+                            </h5>
+                            <h6  style="color: grey">
+                                {{ reservation.date }}
+                            </h6>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('main.get_qrcode', email=user.email, date=reservation.date, time=reservation.time) }}" class="btn btn-info">QR 코드 확인하기</a>
+                        </div>
+                    </div>
+                    
+                {% endfor %}
+            {% else %}
+                <h5> 예약 이력이 없습니다.</h5>
+            {% endif %}
+
+        </div>
+    </div>
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('main.user_menu', email=user.email) }}" class="btn btn-primary">확인</a>
+    </div>
+
+
+</div>
+
+{% endblock %}

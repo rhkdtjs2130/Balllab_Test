@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <h5 class="my-3 border-bottom pb-2">
+        ID: {{ user.phone }}
+        <br>
+        성명: {{ user.username }}
+        <br>
+        보유 LUV: {{ user.point }}
+    </h5>
+
+    <h5 class="my-1 border-bottom border-top pb-2 pt-2 text-center">
+        <b style="color: red;">BALLLAB LUV 충전해택!</b><br>
+        <b>LUV 충전 시 다양한 혜택이 제공됩니다.</b>
+    </h5>
+    <br>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <h3 class="text-center">
+            충 전 금 액
+        </h3>
+        <br>
+
+        <div class="form-check my-2">
+            <div class="mx-auto my-2">
+                <input class="form-check-input my-1" type="radio" name="price" value="10000" id="option_1">
+                    10,000 [10,000] LUV
+                </input>
+            </div>
+
+            <div class="mx-auto my-2">
+                <input class="form-check-input my-1" type="radio" name="price" value="30000" id="option_2">
+                    30,000 [33,000] LUV
+                </input>
+            </div>
+            
+            <div class="mx-auto my-2">
+                <input class="form-check-input my-1" type="radio" name="price" value="50000" id="option_3">
+                    50,000 [55,000] LUV
+                </input>
+            </div>
+
+            <div class="mx-auto my-2">
+                <input class="form-check-input my-1" type="radio" name="price" value="70000" id="option_4">
+                    70,000 [77,000] LUV
+                </input>
+            </div>
+
+            <div class="mx-auto my-2">
+                <input class="form-check-input my-1" type="radio" name="price" value="100000" id="option_5">
+                    100,000 [110,000] LUV
+                </input>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                결제 하기
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

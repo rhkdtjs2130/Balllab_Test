@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h5 class="my-1 border-bottom pb-2 pt-2 text-center">
+        이용하실 지점을 선택해주세요.
+    </h5>
+    <br>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="d-grid gap-2">
+            <input type="radio" class="btn-check my-1" name="area" id="option1" autocomplete="off" value="어린이대공원점">
+            <label class="btn btn-outline-secondary" for="option1">어린이대공원점</label>
+
+            <input type="radio" class="btn-check my-1" name="area" id="option2" autocomplete="off" value="성수자양점">
+            <label class="btn btn-outline-secondary" for="option2">성수자양점</label>
+        </div>
+
+        <br>
+        <h5 class="my-1 border-bottom pb-2 pt-2 text-center">
+            이용하실 날짜를 선택해주세요.
+        </h5>
+        <br>
+        
+        <div class="d-grid gap-2">
+            <input type="date" name="date">
+        </div>
+
+        <br>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                확 인
+            </button>
+        </div>
+    </form>
+
+
+</div>
+
+{% endblock %}

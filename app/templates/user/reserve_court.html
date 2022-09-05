@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 180px;">
+    <br>
+
+    <div class="mt-1 border p-3">
+        <h3 class="my-1 text-center">
+            <b>나의 예약 정보</b>
+        </h3>
+        <h5>
+            지점명: {{ court_area }} <br>
+            코트명: {{ court_name }} <br>
+            이용일자: {{ court_date }} <br>
+            이용회차: <br>
+            <div class="text-end">
+                {% for i in tmp_list %}
+                        {{ timetable[i] }}<br>
+                {% endfor %}
+                <div style="color: red;">
+                    (총 {{ total_reserve_time }}시간) <br>
+                </div>
+            </div> 
+            취소기간: 48시간 이전
+        </h5>
+    </div>
+
+    <div class="mt-1 border p-3">
+        <h3 class="mt-1 text-center">
+            <b>결제 금액</b>
+        </h3>
+        <h5>
+            이용요금: {{ total_price }}원<br>
+            보유 LUV: {{ user.point }} <br>
+            <br>
+            <div class="text-end">
+                <b>총 결제금액:</b><br>
+                <div style="color: red;">
+                    <b>{{ total_pay }}원</b>
+                </div>
+            </div>
+        </h5>
+    </div>
+    <form method="post">
+        <div class="d-grid gap-2 my-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                결제 하기
+            </button>
+        </div>
+    </form>
+
+
+
+</div>
+
+{% endblock %}

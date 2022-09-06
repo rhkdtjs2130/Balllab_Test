@@ -375,7 +375,7 @@ def request_pay_court(email, date, area, time, court, total_price):
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,
             goodname=court,
-            date=datetime.datetime.strptime(date, '%Y-%m-%d'),
+            date=date,
             area=area,
             time=time, 
             # price=total_price,

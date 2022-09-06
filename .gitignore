@@ -4,3 +4,4 @@ balllab.db
 __pycache__
 migrations
 logs
+.png

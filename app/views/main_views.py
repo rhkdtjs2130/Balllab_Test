@@ -403,16 +403,19 @@ def pay_check():
     key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
     value_info = "3c0VLPJBsy0//kO2e3TEexga0slLAiui2bsP1P985Rc="
     
+    tmp_date = datetime.datetime.strptime(request.form['var1'], format='%Y-%m-%d')
+    tmp_pay_date = datetime.datetime.strptime(request.form['pay_date'], format='%Y-%m-%d %H:%M:%S')
+    
     if request.form["linkkey"] == key_info and request.form["linkval"] == value_info:
         
         db_update = PayDB(
             goodname = request.form['goodname'],
-            date = request.form['var1'],
+            date = tmp_date,
             area = request.form['memo'],
             time = request.form['var2'],
             price = request.form['price'],
             recvphone = request.form['recvphone'],
-            pay_date = request.form['pay_date'],
+            pay_date = tmp_pay_date,
             pay_type = request.form['pay_type'],
             pay_state = request.form['pay_state']
         )

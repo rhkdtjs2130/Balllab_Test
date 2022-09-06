@@ -192,7 +192,7 @@ def request_pay_point(email, product, price, date, time):
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
                 user.point += price_to_point[int(price)]
-                buypointcheck.buy = 1
+                buypointcheck[0].buy = 1
                 db.session.commit()
                     
                 return redirect(url_for("main.confirm_pay", email=user.email))

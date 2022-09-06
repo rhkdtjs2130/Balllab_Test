@@ -335,13 +335,13 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
             resp = resp.decode('utf-8')[6]
             print("TEST", "State = ", resp, "Test")
         
-        return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_pay))
+        return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
     
     return render_template("user/reserve_court.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
 
 
-@bp.route('/user_menu/<email>/<date>/<area>/<time>/<court>/<total_price>/request_pay/court', methods=('GET', 'POST'))
-def request_pay_court(email, date, area, time, court, total_price):
+@bp.route('/user_menu/<email>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/request_pay/court', methods=('GET', 'POST'))
+def request_pay_court(email, date, area, time, court, total_pay, total_price):
     user = User.query.filter_by(email=email).first()
     reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
         .filter(ReserveCourt.time.in_(ast.literal_eval(time)))\
@@ -355,7 +355,7 @@ def request_pay_court(email, date, area, time, court, total_price):
             date=date,
             area=area,
             time=time, 
-            # price=total_price,
+            # price=total_pay,
             price=1000,
         ).all()
         
@@ -377,6 +377,13 @@ def request_pay_court(email, date, area, time, court, total_price):
                         email=reservation.email
                     )
                     qr_img.save("./app/static/" + file_name)
+                    
+                if user.point >= int(total_price):
+                    user.point = user.point - int(total_price)
+                else:
+                    user.point = 0
+                    
+                db.session.commit()
                     
                 return redirect(url_for("main.confirm_pay", email=user.email))
         else:

@@ -34,6 +34,12 @@ def create_app():
     app.register_blueprint(auth_views.bp)
     # app.register_blueprint(answer_views.bp)
     # app.register_blueprint(auth_views.bp)
+    @app.after_request
+    def add_header(resp):
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
     
     # # 필터
     # from .filter import format_datetime

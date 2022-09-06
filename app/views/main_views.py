@@ -423,7 +423,7 @@ def pay_check():
 
 @bp.route("/user/qrcode_check", methods=["POST"])
 def qrcode_check():
-    
+    print(request.form)
     reservation_check = ReserveCourt.query.filter_by(
         area=request.form['area'],
         date=request.form['date'],

@@ -382,6 +382,7 @@ def request_pay_court(email, date, area, time, court, total_price):
             price=1000,
         ).all()
         
+        print(paycheck)
         print(len(paycheck))
         
         if len(paycheck) == 1:        

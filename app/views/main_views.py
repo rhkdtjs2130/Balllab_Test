@@ -397,7 +397,7 @@ def get_qrcode(email, date, time):
 
 @bp.route("/pay_check", methods=["POST"])
 def pay_check():
-    
+    print(request.form)
     key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
     value_info = "3c0VLPJBsy0//kO2e3TEexga0slLAiui2bsP1P985Rc="
     

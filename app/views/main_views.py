@@ -434,7 +434,8 @@ def get_qrcode(email, date, time):
 def pay_check():
     key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
     value_info = "3c0VLPJBsy0//kO2e3TEexga0slLAiui2bsP1P985Rc="
-    
+    print(request.form['var1'])
+    print(datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d'))
     if (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "4"):
         
         db_update = PayDB(

@@ -170,6 +170,7 @@ def request_pay_point(email, product, price, date, time):
     
     if request.method == 'POST':
         user = User.query.filter_by(email=email).first()
+        print(user)
         
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,

@@ -312,30 +312,33 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
             else:
                 continue
         
-        post_data = (
-            {
-                'cmd': 'payrequest',
-                'userid': 'balllab',
-                'goodname': court_name, 
-                # 'price': total_price,
-                'price': 1000, 
-                'recvphone': user.phone,
-                "skip_cstpage":"y",
-                "memo": court_area,
-                "var1": court_date,
-                "var2": str(tmp_list),
-            }
-        )
+        if total_pay != 0:
+            post_data = (
+                {
+                    'cmd': 'payrequest',
+                    'userid': 'balllab',
+                    'goodname': court_name, 
+                    # 'price': total_price,
+                    'price': 1000, 
+                    'recvphone': user.phone,
+                    "skip_cstpage":"y",
+                    "memo": court_area,
+                    "var1": court_date,
+                    "var2": str(tmp_list),
+                }
+            )
+                
+            data = urllib.parse.urlencode(post_data).encode('utf-8')
+            req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
             
-        data = urllib.parse.urlencode(post_data).encode('utf-8')
-        req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
-        
-        with urllib.request.urlopen(req, data=data) as f:
-            resp = urllib.parse.unquote_to_bytes(f.read())
-            resp = resp.decode('utf-8')[6]
-            print("TEST", "State = ", resp, "Test")
-        
-        return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+            with urllib.request.urlopen(req, data=data) as f:
+                resp = urllib.parse.unquote_to_bytes(f.read())
+                resp = resp.decode('utf-8')[6]
+                print("TEST", "State = ", resp, "Test")
+            
+            return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+        else:
+            return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
     
     return render_template("user/reserve_court.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
 
@@ -349,19 +352,49 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
 
     if (request.method == 'POST'):
         
-        paycheck = PayDB.query.filter_by(
-            recvphone=user.phone,
-            goodname=court,
-            date=date,
-            area=area,
-            time=time, 
-            # price=total_pay,
-            price=1000,
-        ).all()
-        
-        if len(paycheck) == 1:        
-            if paycheck[0].pay_state == "4":
-                for reservation in reservation_table:
+        if total_pay != "0":
+            paycheck = PayDB.query.filter_by(
+                recvphone=user.phone,
+                goodname=court,
+                date=date,
+                area=area,
+                time=time, 
+                price=total_pay,
+                # price=1000,
+            ).all()
+            
+            if len(paycheck) == 1:        
+                if paycheck[0].pay_state == "4":
+                    for reservation in reservation_table:
+                        file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
+                        reservation.buy = 1
+                        reservation.qr_path = file_name
+                        
+                        db.session.commit()
+                        
+                        ## ADD QR Genertation Code ##
+                        qr_img = make_qr_code(
+                            area=reservation.area,
+                            date=reservation.date,
+                            time=reservation.time,
+                            court=reservation.court,
+                            email=reservation.email
+                        )
+                        qr_img.save("./app/static/" + file_name)
+                        
+                    if user.point >= int(total_price):
+                        user.point = user.point - int(total_price)
+                    else:
+                        user.point = 0
+                        
+                    db.session.commit()
+                        
+                    return redirect(url_for("main.confirm_pay", email=user.email))
+            else:
+                flash("결제가 완료되지 않았습니다.")
+                return redirect("#")
+    else:
+        for reservation in reservation_table:
                     file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
                     reservation.buy = 1
                     reservation.qr_path = file_name
@@ -378,17 +411,15 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                     )
                     qr_img.save("./app/static/" + file_name)
                     
-                if user.point >= int(total_price):
-                    user.point = user.point - int(total_price)
-                else:
-                    user.point = 0
-                    
-                db.session.commit()
-                    
-                return redirect(url_for("main.confirm_pay", email=user.email))
+        if user.point >= int(total_price):
+            user.point = user.point - int(total_price)
         else:
-            flash("결제가 완료되지 않았습니다.")
-            return redirect("#")
+            user.point = 0
+            
+        db.session.commit()
+            
+        return redirect(url_for("main.confirm_pay", email=user.email))
+            
     
     return render_template("user/request_pay_court.html")
 

@@ -432,7 +432,7 @@ def check_reservation(email):
 def get_qrcode(email, date, time):
     user = User.query.filter_by(email=email).first()
     
-    reservation_table = ReserveCourt.query.filter_by(email=email, date=date, time=time, buy=1)
+    reservation_table = ReserveCourt.query.filter_by(email=email, date=date, time=time, buy=1).first()
     
     return render_template("user/get_qrcode.html", user=user, reservation_table=reservation_table)
     

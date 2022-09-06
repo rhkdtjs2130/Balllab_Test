@@ -421,7 +421,7 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
             return redirect(url_for("main.confirm_pay", email=user.email))
             
     
-    return render_template("user/request_pay_court.html")
+    return render_template("user/request_pay_court.html", total_pay=total_pay)
 
 
 @bp.route("/user_menu/check_reservation/<email>", methods=["GET"])

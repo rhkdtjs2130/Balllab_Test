@@ -389,7 +389,7 @@ def request_pay_court(email, date, area, time, court, total_price):
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
                 for reservation in reservation_table:
-                    file_name = url_for("static", filename=f"qr_code/{email}_{area}_{date}_{reservation.time}.png")
+                    file_name = "./app" + url_for("static", filename=f"qr_code/{email}_{area}_{date}_{reservation.time}.png")
                     reservation.pay = 1
                     reservation.qr_path = file_name
                     

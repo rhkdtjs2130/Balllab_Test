@@ -9,7 +9,7 @@
 {%endif%}
 {%endwith%}
 
-<div class="container">
+<div class="container"  onload="noBack();" onpageshow="if(event.persisted) noBack();" onunload="">
 
     <br>
     <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 180px;">

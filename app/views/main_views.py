@@ -176,7 +176,7 @@ def request_pay_point(email, product, price, date, time):
             recvphone=user.phone,
             # goodname=product,
             date=date,
-            time=time,
+            # time=time,
         ).all()
         print("Paye CHeck:", paycheck)
         buypointcheck = BuyPoint.query.filter_by(

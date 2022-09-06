@@ -364,7 +364,7 @@ def request_pay_court(email, date, area, time, court, total_price):
     #     resp = urllib.parse.unquote_to_bytes(f.read())
     #     resp = resp.decode('utf-8')[6]
     #     print("TEST", "State = ", resp, "Test")
-    
+    print("Date = ",date)
     if (request.method == 'POST'):
         
         paycheck = PayDB.query.filter_by(

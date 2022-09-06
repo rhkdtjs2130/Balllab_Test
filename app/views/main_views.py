@@ -247,7 +247,7 @@ def reserve_court_time(email, court_area, court_date, court_name):
     form = ReserveCourtTimeForm()
     
     ## Get information about court reservations
-    court_info = ReserveCourt.query.filter_by(area=court_area, date=court_date, court=court_name).all()
+    court_info = ReserveCourt.query.filter_by(area=court_area, date=court_date, court=court_name, buy=1).all()
     user = User.query.filter_by(email=email).first()
     
     court_info = [int(x.time) for x in court_info]
@@ -315,7 +315,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 'recvphone': user.phone,
                 "skip_cstpage":"y",
                 "memo": court_area,
-                "var1": datetime.datetime.strptime(court_date, "%Y-%m-%d"),
+                "var1": court_date,
                 "var2": str(tmp_list),
             }
         )

@@ -399,6 +399,7 @@ def get_qrcode(email, date, time):
 def pay_check():
     print(request.form)
     print(request.form['var1'])
+    print(type(request.form['var1']))
     key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
     value_info = "3c0VLPJBsy0//kO2e3TEexga0slLAiui2bsP1P985Rc="
     

@@ -190,7 +190,7 @@ def request_pay_point(email, product, price, date, time):
         ).all()
         print("BuyPoing Check:", buypointcheck)
         if len(paycheck) == 1:        
-            if paycheck.pay_state == "4":
+            if paycheck[0].pay_state == "4":
                 user.point += price_to_point[int(price)]
                 buypointcheck.buy = 1
                 db.session.commit()

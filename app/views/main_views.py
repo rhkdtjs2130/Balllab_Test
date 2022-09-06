@@ -407,7 +407,7 @@ def pay_check():
         
         db_update = PayDB(
             goodname = request.form['goodname'],
-            date = datetime.datetime.strptime(request.form['var1'], format='%Y-%m-%d'),
+            date = request.form['var1'],
             area = request.form['memo'],
             time = request.form['var2'],
             price = request.form['price'],

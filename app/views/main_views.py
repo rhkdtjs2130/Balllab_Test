@@ -304,6 +304,30 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
             )
             db.session.add(court_reserve)
             db.session.commit()
+        
+        post_data = (
+            {
+                'cmd': 'payrequest',
+                'userid': 'balllab',
+                'goodname': court_name, 
+                # 'price': total_price,
+                'price': 1000, 
+                'recvphone': user.phone,
+                "skip_cstpage":"y",
+                "memo": court_area,
+                "var1": datetime.datetime.strptime(court_date, "%Y-%m-%d"),
+                "var2": str(tmp_list),
+            }
+        )
+            
+        data = urllib.parse.urlencode(post_data).encode('utf-8')
+        req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
+        
+        with urllib.request.urlopen(req, data=data) as f:
+            resp = urllib.parse.unquote_to_bytes(f.read())
+            resp = resp.decode('utf-8')[6]
+            print("TEST", "State = ", resp, "Test")
+        
         return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_pay))
     
     return render_template("user/reserve_court.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
@@ -316,28 +340,29 @@ def request_pay_court(email, date, area, time, court, total_price):
         .filter(ReserveCourt.time.in_(ast.literal_eval(time)))\
         .all()
     
-    post_data = (
-        {
-            'cmd': 'payrequest',
-            'userid': 'balllab',
-            'goodname': court, 
-            'price': total_price, 
-            'recvphone': user.phone,
-            "skip_cstpage":"y",
-            "memo": area,
-            "var1": date,
-            "var2": time,
-            "feedback_url":"#"
-        }
-    )
+    # post_data = (
+    #     {
+    #         'cmd': 'payrequest',
+    #         'userid': 'balllab',
+    #         'goodname': court, 
+    #         # 'price': total_price,
+    #         'price': 1000, 
+    #         'recvphone': user.phone,
+    #         "skip_cstpage":"y",
+    #         "memo": area,
+    #         "var1": date,
+    #         "var2": time,
+    #         "feedback_url":"#"
+    #     }
+    # )
     
-    data = urllib.parse.urlencode(post_data).encode('utf-8')
-    req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
+    # data = urllib.parse.urlencode(post_data).encode('utf-8')
+    # req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
     
-    with urllib.request.urlopen(req, data=data) as f:
-        resp = urllib.parse.unquote_to_bytes(f.read())
-        resp = resp.decode('utf-8')[6]
-        print("TEST", "State = ", resp, "Test")
+    # with urllib.request.urlopen(req, data=data) as f:
+    #     resp = urllib.parse.unquote_to_bytes(f.read())
+    #     resp = resp.decode('utf-8')[6]
+    #     print("TEST", "State = ", resp, "Test")
     
     if (request.method == 'POST'):
         
@@ -350,7 +375,7 @@ def request_pay_court(email, date, area, time, court, total_price):
         ).all()
         
         if len(paycheck) == 1:        
-            if paycheck['pay_state'] == "4":
+            if paycheck[0]['pay_state'] == "4":
                 for reservation in reservation_table:
                     file_name = url_for("static", filename=f"qr_code/{email}_{area}_{date}_{reservation.time}.png")
                     reservation['pay'] = 1

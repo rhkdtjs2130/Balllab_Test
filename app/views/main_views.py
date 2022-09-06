@@ -339,6 +339,7 @@ def request_pay_court(email, date, area, time, court, total_price):
     reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
         .filter(ReserveCourt.time.in_(ast.literal_eval(time)))\
         .all()
+    print(reservation_table)
     
     # post_data = (
     #     {
@@ -368,11 +369,15 @@ def request_pay_court(email, date, area, time, court, total_price):
         
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,
-            area=area,
+            goodname=court,
             date=datetime.datetime.strptime(date, '%Y-%m-%d'),
-            court=court,
-            time=time
+            area=area,
+            time=time, 
+            # price=total_price,
+            price=1000,
         ).all()
+        
+        print(len(paycheck))
         
         if len(paycheck) == 1:        
             if paycheck[0]['pay_state'] == "4":

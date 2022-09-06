@@ -36,7 +36,7 @@ class ReserveCourt(db.Model):
 class PayDB(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     goodname = db.Column(db.String(120), unique=False)
-    date = db.Column(db.DateTime, nullable=True)
+    date = db.Column(db.Date, nullable=True)
     area = db.Column(db.String(120), unique=False, nullable=True)
     time = db.Column(db.String(120), nullable=True)
     price = db.Column(db.Integer, unique=False, nullable=False)

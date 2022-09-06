@@ -171,24 +171,19 @@ def request_pay_point(email, product, price, date, time):
     if request.method == 'POST':
         user = User.query.filter_by(email=email).first()
         
-        print(user.phone, type(user.phone))
-        print(product, type(product))
-        print(date, type(date))
-        print(time, type(time))
-        
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,
             goodname=product,
             date=date,
             time=time,
         ).all()
-        print("Paye CHeck:", paycheck)
+        
         buypointcheck = BuyPoint.query.filter_by(
             email=user.email,
             date=date,
             time=time,
         ).all()
-        print("BuyPoing Check:", buypointcheck)
+        
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
                 user.point += price_to_point[int(price)]
@@ -292,18 +287,30 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
         
     if request.method == 'POST':
         for tmp_time in tmp_list:
-            court_reserve = ReserveCourt(
-                date = datetime.datetime.strptime(court_date, "%Y-%m-%d"),
-                area = court_area, 
-                time = tmp_time,
-                court = court_name, 
-                phone = user.phone, 
-                email = user.email, 
-                username = user.username, 
-                buy = 0, 
-            )
-            db.session.add(court_reserve)
-            db.session.commit()
+            
+            reserve_check = ReserveCourt.query.filter_by(
+                date=datetime.datetime.strptime(court_date, "%Y-%m-%d"), 
+                area=court_area, 
+                court=court_name,
+                time=tmp_time,
+            ).first()
+            
+            if reserve_check == None:
+                ## Reserve Court ##
+                court_reserve = ReserveCourt(
+                    date = datetime.datetime.strptime(court_date, "%Y-%m-%d"),
+                    area = court_area, 
+                    time = tmp_time,
+                    court = court_name, 
+                    phone = user.phone, 
+                    email = user.email, 
+                    username = user.username, 
+                    buy = 0, 
+                )
+                db.session.add(court_reserve)
+                db.session.commit()
+            else:
+                continue
         
         post_data = (
             {
@@ -339,37 +346,7 @@ def request_pay_court(email, date, area, time, court, total_price):
     reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
         .filter(ReserveCourt.time.in_(ast.literal_eval(time)))\
         .all()
-    print(reservation_table)
-    
-    # post_data = (
-    #     {
-    #         'cmd': 'payrequest',
-    #         'userid': 'balllab',
-    #         'goodname': court, 
-    #         # 'price': total_price,
-    #         'price': 1000, 
-    #         'recvphone': user.phone,
-    #         "skip_cstpage":"y",
-    #         "memo": area,
-    #         "var1": date,
-    #         "var2": time,
-    #         "feedback_url":"#"
-    #     }
-    # )
-    
-    # data = urllib.parse.urlencode(post_data).encode('utf-8')
-    # req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
-    
-    # with urllib.request.urlopen(req, data=data) as f:
-    #     resp = urllib.parse.unquote_to_bytes(f.read())
-    #     resp = resp.decode('utf-8')[6]
-    #     print("TEST", "State = ", resp, "Test")
-    # print("Date = ", date)
-    # print("Date = ", datetime.datetime.strptime(date, '%Y-%m-%d'))
-    # print(time)
-    # print(court)
-    # print(area)
-    # print(user.phone)
+
     if (request.method == 'POST'):
         
         paycheck = PayDB.query.filter_by(
@@ -381,10 +358,6 @@ def request_pay_court(email, date, area, time, court, total_price):
             # price=total_price,
             price=1000,
         ).all()
-        
-        print(paycheck)
-        print(len(paycheck))
-        print(paycheck[0])
         
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
@@ -419,8 +392,12 @@ def check_reservation(email):
     date = datetime.date.today()
     
     user = User.query.filter_by(email=email).first()
+    
+    subquery = db.query(ReserveCourt).distict(ReserveCourt.time)
+    
     reservation_table = ReserveCourt.query.filter_by(email=email, buy=1)\
         .filter(ReserveCourt.date >= date)\
+        .query(subquery)\
         .order_by(ReserveCourt.date)\
         .order_by(ReserveCourt.time)\
         .all()

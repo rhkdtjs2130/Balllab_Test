@@ -292,7 +292,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 date=datetime.datetime.strptime(court_date, "%Y-%m-%d"), 
                 area=court_area, 
                 court=court_name,
-                time=tmp_time,
+                time=str(tmp_time),
             ).first()
             
             if reserve_check == None:
@@ -300,7 +300,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 court_reserve = ReserveCourt(
                     date = datetime.datetime.strptime(court_date, "%Y-%m-%d"),
                     area = court_area, 
-                    time = tmp_time,
+                    time = str(tmp_time),
                     court = court_name, 
                     phone = user.phone, 
                     email = user.email, 
@@ -311,6 +311,8 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 db.session.commit()
             else:
                 continue
+            
+        tmp_list = [str(x) for x in tmp_list]
         
         if total_pay != 0:
             post_data = (
@@ -337,6 +339,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 print("TEST", "State = ", resp, "Test")
             
             return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+        
         else:
             return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
     

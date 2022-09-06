@@ -412,7 +412,7 @@ def pay_check():
             time = request.form['var2'],
             price = request.form['price'],
             recvphone = request.form['recvphone'],
-            pay_date = datetime.datetime.strptime(request.form['pay_date'], format='%Y-%m-%d %H:%M:%S'),
+            pay_date = request.form['pay_date'],
             pay_type = request.form['pay_type'],
             pay_state = request.form['pay_state']
         )

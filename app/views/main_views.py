@@ -177,13 +177,13 @@ def request_pay_point(email, product, price, date, time):
             date=date,
             time=time,
         ).all()
-        
+        print("Paye CHeck:", paycheck)
         buypointcheck = BuyPoint.query.filter_by(
             email=user.email,
             date=date,
             time=time,
         ).all()
-        
+        print("BuyPoing Check:", buypointcheck)
         if len(paycheck) == 1:        
             if paycheck['pay_state'] == "4":
                 user.point += price_to_point[int(price)]
@@ -422,6 +422,7 @@ def pay_check():
             
         db.session.add(db_update)
         db.session.commit()
+        print("SUCCESS")
         return "SUCCESS"
     else:
         return "FAIL"

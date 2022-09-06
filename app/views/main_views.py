@@ -384,6 +384,7 @@ def request_pay_court(email, date, area, time, court, total_price):
         
         print(paycheck)
         print(len(paycheck))
+        print(paycheck[0])
         
         if len(paycheck) == 1:        
             if paycheck[0]['pay_state'] == "4":

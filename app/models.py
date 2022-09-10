@@ -45,4 +45,7 @@ class PayDB(db.Model):
     pay_type = db.Column(db.String(120), nullable=False)
     pay_state = db.Column(db.String(120), nullable=False)
     
-    
+class DoorStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    area = db.Column(db.String(120), unique=True, nullable=False)
+    status = db.Column(db.String(120), nullable=False, server_default='0')

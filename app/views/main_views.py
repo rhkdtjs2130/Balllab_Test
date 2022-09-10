@@ -8,7 +8,7 @@ from werkzeug.utils import redirect
 # from datetime import datetime
 from sqlalchemy import desc
 
-from app.models import User, BuyPoint, ReserveCourt, PayDB
+from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
 from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm
 from ..qr_generate import make_qr_code, decode_qr
@@ -494,3 +494,34 @@ def qrcode_check():
         return {'result': 1}
     else:
         return {'result': 0}
+    
+
+## Door Open
+@bp.route("/door_open", methods=["POST"])
+def door_open():
+    
+    area = request.form['area']
+    doorstatus = DoorStatus.query.filter_by(area=area).first()
+    doorstatus.status = "1"
+    db.session.commit()
+    
+    return "Open Door"
+
+## Door Open
+@bp.route("/door_close", methods=["POST"])
+def door_close():
+    
+    area = request.form['area']
+    doorstatus = DoorStatus.query.filter_by(area=area).first()
+    doorstatus.status = "0"
+    db.session.commit()
+    
+    return "Close Door"
+
+@bp.route("/get_door_status", methods=["POST"])
+def get_door_status():
+    
+    area = request.form['area']
+    doorstatus = DoorStatus.query.filter_by(area=area).first()
+    
+    return doorstatus.status

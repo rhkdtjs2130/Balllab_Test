@@ -24,11 +24,11 @@
 
             {% for i in range(0, timetable|length) %}
                 {% if i in court_info %}
-                    <input type="checkbox" class="btn-check my-1 checkbox_limit" disabled name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
-                    <label class="btn btn-outline-danger" for={{ timetable[i]}}>{{ timetable[i] }}</label>
+                    <input type="checkbox" class="btn-check my-1 checkbox_limit form-check-input" disabled name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <label class="btn btn-outline-danger form-check-label" for={{ timetable[i]}}>{{ timetable[i] }}</label>
                 {% else %}
-                    <input type="checkbox" class="btn-check my-1 checkbox_limit" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
-                    <label class="btn btn-outline-secondary" for={{ timetable[i]}}>{{ timetable[i] }}</label>
+                    <input type="checkbox" class="btn-check my-1 checkbox_limit form-check-input" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <label class="btn btn-outline-secondary form-check-label" for={{ timetable[i]}}>{{ timetable[i] }}</label>
                 {% endif %}
             {% endfor %}
 

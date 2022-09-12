@@ -357,9 +357,12 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
 
 @bp.route('/user_menu/<email>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/request_pay/court', methods=('GET', 'POST'))
 def request_pay_court(email, date, area, time, court, total_pay, total_price):
+    tmp_time = ast.literal_eval(time)
+    if type(tmp_time) == int:
+        tmp_time = [tmp_time]
     user = User.query.filter_by(email=email).first()
     reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
-        .filter(ReserveCourt.time.in_(ast.literal_eval(time)))\
+        .filter(ReserveCourt.time.in_(tmp_time))\
         .all()
 
     if (request.method == 'POST'):

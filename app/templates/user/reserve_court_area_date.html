@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 
+<style>
+    .pickdate {
+        -webkit-appearance: textfield;;
+        -moz-appearance: textfield;
+    }
+</style>
+
 <div class="container">
     <br>
     <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
@@ -28,8 +35,8 @@
         <br>
         
         <div class="d-grid gap-2">
-            <h6>아래를 탭해주세요.</h6>
-            <input type="date" name="date" value="{{ cur_date }}" min="{{ cur_date }}" max="{{ max_date }}" style="width:100%;">
+            <h6><b>아래를 탭해주세요.</b></h6>
+            <input class="pickdate" type="date" name="date" value="{{ cur_date }}" min="{{ cur_date }}" max="{{ max_date }}" style="width:100%;">
         </div>
 
         <br>

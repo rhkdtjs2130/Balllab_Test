@@ -217,13 +217,16 @@ def confirm_pay(email):
 def reserve_court_area_date(email):
     form = ReserveCourtAreaDateForm()
     user = User.query.filter_by(email=email).first()
+    today_tmp = datetime.date.today()
+    cur_date = today_tmp.strftime("%Y-%m-%d")
+    max_date = (today_tmp + datetime.timedelta(days=14)).strftime("%Y-%m-%d")
     
     if request.method == 'POST' and form.validate_on_submit():
         area = form.area.data
         date = form.date.data
         return redirect(url_for("main.reserve_court_court", email=user.email, area=area, date=date))
     
-    return render_template("user/reserve_court_area_date.html", form=form)
+    return render_template("user/reserve_court_area_date.html", form=form, cur_date=cur_date, max_date=max_date)
 
 @bp.route("/user_menu/<email>/<area>/<date>/reserve_court/select_court_court", methods=('GET', 'POST'))
 def reserve_court_court(email, area, date):

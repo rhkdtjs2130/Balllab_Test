@@ -20,7 +20,7 @@
     <form method="post">
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
-        <div class="d-grid gap-2 my-3">
+        <div class="d-grid gap-2 my-3 form-check">
 
             {% for i in range(0, timetable|length) %}
                 {% if i in court_info %}

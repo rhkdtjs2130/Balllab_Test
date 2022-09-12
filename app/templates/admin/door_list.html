@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include "form_errors.html" %}
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h3 class="my-3 border-bottom pb-2">
+        <b>원격 도어락 개방</b>
+    </h3>
+    <br>
+
+    <div class="d-grid gap-auto mb-3">
+        <form method="post" name="DoorOpenForm">
+            <input type="hidden", name="area", value="center_1">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary my-1 btn-lg">어린이대공원점</button>
+            </div>
+        </form>
+
+        <form method="post" name="DoorOpenForm">
+            <input type="hidden", name="area", value="center_2_3f">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary my-1 btn-lg">성수자양점 3층</button>
+            </div>
+        </form>
+
+        <form method="post" name="DoorOpenForm">
+            <input type="hidden", name="area", value="center_2_4f">
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary my-1 btn-lg">성수자양점 4층</button>
+            </div>
+        </form>
+
+    </div> 
+
+</div>
+
+{% endblock %}

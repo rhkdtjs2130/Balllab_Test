@@ -10,7 +10,7 @@ from sqlalchemy import desc
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
-from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm
+from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm
 from ..qr_generate import make_qr_code, decode_qr
 
 bp = Blueprint("main", __name__, url_prefix='/')
@@ -87,6 +87,13 @@ timetable = [
     "23:30 ~ 24:00",
 ]
 
+door_map_dict = {
+    "1번":"center_1",
+    "2번":"center_1",
+    "3번":"center_1",
+    '3층':'center_2_3f',
+    '4층':'center_2_4f',
+}
 
 
 @bp.route('/')
@@ -369,21 +376,21 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
             if len(paycheck) == 1:        
                 if paycheck[0].pay_state == "4":
                     for reservation in reservation_table:
-                        file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
+                        # file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
                         reservation.buy = 1
-                        reservation.qr_path = file_name
+                        # reservation.qr_path = file_name
                         
                         db.session.commit()
                         
                         ## ADD QR Genertation Code ##
-                        qr_img = make_qr_code(
-                            area=reservation.area,
-                            date=reservation.date,
-                            time=reservation.time,
-                            court=reservation.court,
-                            email=reservation.email
-                        )
-                        qr_img.save("./app/static/" + file_name)
+                        # qr_img = make_qr_code(
+                        #     area=reservation.area,
+                        #     date=reservation.date,
+                        #     time=reservation.time,
+                        #     court=reservation.court,
+                        #     email=reservation.email
+                        # )
+                        # qr_img.save("./app/static/" + file_name)
                         
                     if user.point >= int(total_price):
                         user.point = user.point - int(total_price)
@@ -398,21 +405,21 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 return redirect("#")
         else:
             for reservation in reservation_table:
-                        file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
+                        # file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
                         reservation.buy = 1
-                        reservation.qr_path = file_name
+                        # reservation.qr_path = file_name
                         
                         db.session.commit()
                         
                         ## ADD QR Genertation Code ##
-                        qr_img = make_qr_code(
-                            area=reservation.area,
-                            date=reservation.date,
-                            time=reservation.time,
-                            court=reservation.court,
-                            email=reservation.email
-                        )
-                        qr_img.save("./app/static/" + file_name)
+                        # qr_img = make_qr_code(
+                        #     area=reservation.area,
+                        #     date=reservation.date,
+                        #     time=reservation.time,
+                        #     court=reservation.court,
+                        #     email=reservation.email
+                        # )
+                        # qr_img.save("./app/static/" + file_name)
                         
             if user.point >= int(total_price):
                 user.point = user.point - int(total_price)
@@ -427,9 +434,9 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
     return render_template("user/request_pay_court.html", total_pay=total_pay)
 
 
-@bp.route("/user_menu/check_reservation/<email>", methods=["GET"])
+@bp.route("/user_menu/check_reservation/<email>", methods=["GET", "POST"])
 def check_reservation(email):
-    
+    form = DoorOpenForm()
     date = datetime.date.today()
     
     user = User.query.filter_by(email=email).first()
@@ -439,17 +446,37 @@ def check_reservation(email):
         .order_by(ReserveCourt.date)\
         .order_by(ReserveCourt.time)\
         .all()
+        
+    if request.method == "POST":
+        time_tmp = timetable[int(request.form['time'])]
+        time_start = time_tmp.split()[0]
+        time_end = time_tmp.split()[-1]
+        
+        time_str = f"{request.form['date']} {time_start}"
+        date_time_start = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+        date_time_start = date_time_start - datetime.timedelta(minutes=5)
+        
+        time_str = f"{request.form['date']} {time_end}"
+        date_time_end = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+        date_time_end = date_time_end + datetime.timedelta(minutes=5)
+        
+        cur_date = datetime.datetime.today()
+        
+        if (cur_date >= date_time_start) and (cur_date <= date_time_end):
+            data_dict = {
+                'area': door_map_dict[request.form['area']],
+            }
+            # requests.post("http://43.200.247.167/door_open", data=data_dict)
+            print("가능")
+            flash("열렸습니다")
+            redirect("#")
+        else:
+            error = "이용 가능한 시간이 아닙니다."
+            print("불가능")
+            flash(error)
     
-    return render_template("user/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable)
+    return render_template("user/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
     
-    
-@bp.route("/user_menu/get_qrcode/<email>/<date>/<time>", methods=["GET"])
-def get_qrcode(email, date, time):
-    user = User.query.filter_by(email=email).first()
-    
-    reservation_table = ReserveCourt.query.filter_by(email=email, date=date, time=time, buy=1).first()
-    
-    return render_template("user/get_qrcode.html", user=user, reservation_table=reservation_table)
     
 
 @bp.route("/pay_check", methods=["POST"])
@@ -477,6 +504,16 @@ def pay_check():
         return "SUCCESS"
     else:
         return "FAIL"
+    
+    
+@bp.route("/user_menu/get_qrcode/<email>/<date>/<time>", methods=["GET"])
+def get_qrcode(email, date, time):
+    user = User.query.filter_by(email=email).first()
+    
+    reservation_table = ReserveCourt.query.filter_by(email=email, date=date, time=time, buy=1).first()
+    
+    return render_template("user/get_qrcode.html", user=user, reservation_table=reservation_table)
+
 
 @bp.route("/user/qrcode_check", methods=["POST"])
 def qrcode_check():
@@ -507,7 +544,7 @@ def door_open():
     
     return "Open Door"
 
-## Door Open
+## Door Close
 @bp.route("/door_close", methods=["POST"])
 def door_close():
     

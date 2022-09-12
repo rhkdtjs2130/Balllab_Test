@@ -8,6 +8,7 @@ class User(db.Model):
     birth = db.Column(db.String(120), unique=False, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     point = db.Column(db.Integer, nullable=False, server_default="0")
+    user_type = db.Column(db.Integer, nullable=False, server_default="0")
     
 class BuyPoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)

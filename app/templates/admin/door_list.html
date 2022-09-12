@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% include "form_errors.html" %}
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
+
 <div class="container">
 
     <br>

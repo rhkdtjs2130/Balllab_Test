@@ -31,6 +31,7 @@ def door_list(email):
             'area':request.form['area']
         }
         requests.post("http://43.200.247.167/door_open", data=data_dict)
+        flash("열렸습니다.")
         redirect("#")
     
     return  render_template("admin/door_list.html", user=user, form=form)

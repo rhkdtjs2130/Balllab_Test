@@ -7,6 +7,7 @@ from flask import Blueprint, url_for, render_template, request, flash
 from werkzeug.utils import redirect
 # from datetime import datetime
 from sqlalchemy import desc
+from time import sleep
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
@@ -600,6 +601,7 @@ def refund_reservation(email, mul_no):
         
             if pay_info.pay_type == "point_only":
                 user.point = user.point + pay_info.used_point
+                pay_info.pay_state = '64'
                 db.session.commit()
                 
                 for reservation in reservation_info:
@@ -625,12 +627,17 @@ def refund_reservation(email, mul_no):
                     resp = resp.decode('utf-8')[6]
                     print("TEST", "State = ", resp, "Test")
                 
+                sleep(0.5)
                 while True: 
                     pay_check = PayDB.query.filter_by(mul_no=mul_no).first()
+                    print(pay_check.pay_state)
+                    print(type(pay_check.pay_state))
                     if pay_check.pay_state == "9" or pay_check.pay_state == "64":
+                        print("case 1")
                         break
-                    else:
-                        continue
+                    if (pay_check.pay_state == "9") | (pay_check.pay_state == "64"):
+                        print("case 2")
+                        break
                     
                 user.point = user.point + pay_info.used_point
                 db.session.commit()

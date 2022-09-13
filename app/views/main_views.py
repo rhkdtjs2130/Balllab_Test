@@ -627,17 +627,7 @@ def refund_reservation(email, mul_no):
                     resp = resp.decode('utf-8')[6]
                     print("TEST", "State = ", resp, "Test")
                 
-                sleep(0.5)
-                while True: 
-                    pay_check = PayDB.query.filter_by(mul_no=mul_no).first()
-                    print(pay_check.pay_state)
-                    print(type(pay_check.pay_state))
-                    if pay_check.pay_state == "9" or pay_check.pay_state == "64":
-                        print("case 1")
-                        break
-                    if (pay_check.pay_state == "9") | (pay_check.pay_state == "64"):
-                        print("case 2")
-                        break
+                sleep(1)
                     
                 user.point = user.point + pay_info.used_point
                 db.session.commit()

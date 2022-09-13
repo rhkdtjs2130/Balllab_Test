@@ -375,27 +375,18 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 area=area,
                 time=time, 
                 price=total_pay,
+                used_point=str(int(total_price) - int(total_pay)),
                 # price=1000,
             ).all()
             
             if len(paycheck) == 1:        
                 if paycheck[0].pay_state == "4":
+                    
                     for reservation in reservation_table:
-                        # file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
                         reservation.buy = 1
-                        # reservation.qr_path = file_name
+                        reservation.mul_no = paycheck[0].mul_no
                         
                         db.session.commit()
-                        
-                        ## ADD QR Genertation Code ##
-                        # qr_img = make_qr_code(
-                        #     area=reservation.area,
-                        #     date=reservation.date,
-                        #     time=reservation.time,
-                        #     court=reservation.court,
-                        #     email=reservation.email
-                        # )
-                        # qr_img.save("./app/static/" + file_name)
                         
                     if user.point >= int(total_price):
                         user.point = user.point - int(total_price)
@@ -409,22 +400,30 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 flash("결제가 완료되지 않았습니다.")
                 return redirect("#")
         else:
+            pay_db = PayDB.query.all()
+            
+            pay_add = PayDB(
+                mul_no = f"point_{len(pay_db)}",
+                goodname = court,
+                date = datetime.datetime.strptime(date, "%Y-%m-%d"),
+                area = area,
+                time = time,
+                price = total_pay,
+                used_point = total_price,
+                recvphone = user.phone,
+                pay_date = datetime.datetime.now(), 
+                pay_type = "point_only",
+                pay_state = "4",
+            )
+            
+            db.session.add(pay_add)
+            db.session.commit()
+            
             for reservation in reservation_table:
-                        # file_name = f"qr_code/{email}_{area}_{date}_{reservation.time}.png"
-                        reservation.buy = 1
-                        # reservation.qr_path = file_name
-                        
-                        db.session.commit()
-                        
-                        ## ADD QR Genertation Code ##
-                        # qr_img = make_qr_code(
-                        #     area=reservation.area,
-                        #     date=reservation.date,
-                        #     time=reservation.time,
-                        #     court=reservation.court,
-                        #     email=reservation.email
-                        # )
-                        # qr_img.save("./app/static/" + file_name)
+                reservation.buy = 1
+                reservation.mul_no = f"point_{len(pay_db)}"
+                
+                db.session.commit()
                         
             if user.point >= int(total_price):
                 user.point = user.point - int(total_price)
@@ -490,6 +489,7 @@ def pay_check():
     if (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "4"):
         
         db_update = PayDB(
+            mul_no = request.form['mul_no'],
             goodname = request.form['goodname'],
             date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d'),
             area = request.form['memo'],
@@ -503,8 +503,15 @@ def pay_check():
             
         db.session.add(db_update)
         db.session.commit()
-        print("SUCCESS")
         return "SUCCESS"
+    
+    elif (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "9" or request.form['pay_state'] == "64"):
+        
+        pay_info = PayDB.query.filter_by(mul_no=request.form['mul_no']).first()
+        pay_info.pay_state = request.form['pay_state']
+        db.session.commit()
+        return "SUCCESS"
+        
     else:
         return "FAIL"
     
@@ -565,3 +572,74 @@ def get_door_status():
     doorstatus = DoorStatus.query.filter_by(area=area).first()
     
     return doorstatus.status
+
+@bp.route("/refund_reservation/<email>/<mul_no>", methods=["GET", "POST"])
+def refund_reservation(email, mul_no):
+    
+    user = User.query.filter_by(email=email).first()
+    pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
+    reservation_info = ReserveCourt.query.filter_by(mul_no=mul_no).order_by(ReserveCourt.time).all()
+    
+    if request.method == "POST":
+        
+        reservation_first = reservation_info[0]
+        
+        time_tmp = timetable[int(reservation_first.time)]
+        time_start = time_tmp.split()[0]
+        
+        time_str = f"{reservation_first.date} {time_start}"
+        date_time_start = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+        refund_due_date = date_time_start - datetime.timedelta(days=2)
+        
+        cur_date = datetime.datetime.now()
+        
+        if cur_date < refund_due_date:
+        
+            if pay_info.pay_type == "point_only":
+                user.point = user.point + pay_info.used_point
+                db.session.commit()
+                
+                for reservation in reservation_info:
+                    reservation.buy = 0
+                    db.session.commit()
+                    
+            else:
+                key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
+                
+                post_data = {
+                    'cmd': 'paycancel',
+                    'userid': 'balllab',
+                    'linkkey': key_info,
+                    'mul_no':pay_info.mul_no,
+                    'cancelmemo': "48시간 전 예약 취소",
+                }
+                
+                data = urllib.parse.urlencode(post_data).encode('utf-8')
+                req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
+                
+                with urllib.request.urlopen(req, data=data) as f:
+                    resp = urllib.parse.unquote_to_bytes(f.read())
+                    resp = resp.decode('utf-8')[6]
+                    print("TEST", "State = ", resp, "Test")
+                
+                while True: 
+                    pay_check = PayDB.query.filter_by(mul_no=mul_no).first()
+                    if pay_check.pay_state == "9" or pay_check.pay_state == "64":
+                        break
+                    else:
+                        continue
+                    
+                user.point = user.point + pay_info.used_point
+                db.session.commit()
+                
+                for reservation in reservation_info:
+                    reservation.buy = 0
+                    db.session.commit()
+                    
+            flash("예약이 취소되었습니다. 포인트 반환 및 환불 처리가 완료되었습니다.")
+            return redirect(url_for('main.check_reservation', email=user.email))
+        else:
+            flash("이용 예정 시각과 현재 시각과의 차이가 48시간 이내이므로 예약 취소가 불가능합니다.")
+            return redirect(url_for('main.check_reservation', email=user.email))
+    
+    return render_template("user/refund_reservation.html", user=user)

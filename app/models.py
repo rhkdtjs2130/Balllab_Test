@@ -32,15 +32,18 @@ class ReserveCourt(db.Model):
     email = db.Column(db.String(120), unique=False, nullable=False)
     username = db.Column(db.String(120), unique=False, nullable=False)
     buy = db.Column(db.Integer, nullable=False, server_default="0")
+    mul_no = db.Column(db.String(120), unique=False, server_default="0")
     qr_path = db.Column(db.String(120), unique=False)
     
 class PayDB(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    mul_no = db.Column(db.String(120), unique=False, nullable=False, server_default="NA")
     goodname = db.Column(db.String(120), unique=False)
     date = db.Column(db.Date, nullable=True)
     area = db.Column(db.String(120), unique=False, nullable=True)
     time = db.Column(db.String(120), nullable=True)
     price = db.Column(db.Integer, unique=False, nullable=False)
+    used_point = db.Column(db.Integer, nullable=False, unique=False)
     recvphone = db.Column(db.String(120), unique=False, nullable=False)
     pay_date = db.Column(db.DateTime, nullable=False)
     pay_type = db.Column(db.String(120), nullable=False)

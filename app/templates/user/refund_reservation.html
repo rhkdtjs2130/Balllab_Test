@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+{%with messages = get_flashed_messages()%}
+{%if messages %}
+    <script type="text/javascript">
+        alert("{{messages[-1]}}");
+    </script>
+{%endif%}
+{%endwith%}
+
+<script type="text/javascript">
+    window.history.forward();
+    function noBack() {
+        window.history.forward();
+    }
+</script>
+
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 180px;">
+    <br>
+
+    <h5 class="my-1 border pb-2 pt-2 text-center">
+        <br>
+        확인 버튼을 누르시면 
+        <br>
+        예약 및 결제 취소가 진행됩니다.
+        <br>
+        <br>
+        코트 예약 시간을 기준으로
+        <br>
+        <div class="text-danger">48시간 전에만 취소가 가능합니다.</div>
+        <br>
+    </h5>
+    <br>
+    <form method="post">
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" type="submit">
+                확 인
+            </button>
+        </div>
+    </form>
+    <div class="d-grid gap-2 my-3">
+        <a class="btn btn-success" href="{{ url_for('main.check_reservation', email=user.email) }}">
+            목록으로 돌아가기
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

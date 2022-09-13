@@ -19,14 +19,14 @@
 
 <div class="container">
     <br>
-    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 150px;">
     <br>
     <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
         <b>예약 확인</b>
     </h5>
 
     <div class="mx-1">
-        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 400px"  data-bs-spy="scroll">
+        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
             {% if reservation_table|length !=0 %}
                 {% for reservation in reservation_table %}
                 <div class="border p-3 rounded-start bg-light">
@@ -54,6 +54,9 @@
                             <button type="submit" class="btn btn-primary">입장</button>
                         </div>
                     </form>
+                    <div class="d-grid gap-2 my-2">
+                        <a href="{{ url_for('main.refund_reservation', email=user.email, mul_no=reservation.mul_no) }}" class="btn btn-danger">예약 취소</a>
+                    </div>
                 </div>
                 {% endfor %}
             {% else %}

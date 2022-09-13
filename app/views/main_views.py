@@ -329,7 +329,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                     'cmd': 'payrequest',
                     'userid': 'balllab',
                     'goodname': court_name, 
-                    'price': total_price,
+                    'price': total_pay,
                     # 'price': 1000, 
                     'recvphone': user.phone,
                     "skip_cstpage":"y",

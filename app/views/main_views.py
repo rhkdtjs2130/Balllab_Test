@@ -291,8 +291,10 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
     
     if total_price >= user.point:
         total_pay = total_price - user.point
+        used_point = user.point
     elif user.point > total_price:
         total_pay = 0
+        used_point = user.point - total_price
         
     if request.method == 'POST':
         for tmp_time in tmp_list:
@@ -333,7 +335,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                     # 'price': 1000, 
                     'recvphone': user.phone,
                     "skip_cstpage":"y",
-                    "memo": court_area,
+                    "memo": f"{court_area} {used_point}",
                     "var1": court_date,
                     "var2": str(tmp_list),
                 }
@@ -492,13 +494,14 @@ def pay_check():
             mul_no = request.form['mul_no'],
             goodname = request.form['goodname'],
             date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d'),
-            area = request.form['memo'],
+            area = request.form['memo'].split()[0],
             time = request.form['var2'],
             price = request.form['price'],
             recvphone = request.form['recvphone'],
             pay_date = datetime.datetime.strptime(request.form['pay_date'], '%Y-%m-%d %H:%M:%S'),
             pay_type = request.form['pay_type'],
-            pay_state = request.form['pay_state']
+            pay_state = request.form['pay_state'],
+            used_point = int(request.form['memo'].split()[1]),
         )
             
         db.session.add(db_update)

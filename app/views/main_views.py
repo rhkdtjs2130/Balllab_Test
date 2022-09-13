@@ -382,7 +382,7 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 # price=1000,
             ).order_by(PayDB.mul_no.desc()).first()
             
-            if len(paycheck) == 1:        
+            if paycheck != None:        
                 if paycheck.pay_state == "4":
                     
                     for reservation in reservation_table:

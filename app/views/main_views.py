@@ -380,14 +380,14 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 price=total_pay,
                 used_point=str(int(total_price) - int(total_pay)),
                 # price=1000,
-            ).all()
+            ).order_by(PayDB.mul_no.desc()).first()
             
             if len(paycheck) == 1:        
-                if paycheck[0].pay_state == "4":
+                if paycheck.pay_state == "4":
                     
                     for reservation in reservation_table:
                         reservation.buy = 1
-                        reservation.mul_no = paycheck[0].mul_no
+                        reservation.mul_no = paycheck.mul_no
                         
                         db.session.commit()
                         

@@ -5,13 +5,14 @@ import datetime
 
 from flask import Blueprint, url_for, render_template, request, flash
 from werkzeug.utils import redirect
+from werkzeug.security import check_password_hash, generate_password_hash
 # from datetime import datetime
 from sqlalchemy import desc
 from time import sleep
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
-from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm
+from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm
 from ..qr_generate import make_qr_code, decode_qr
 
 bp = Blueprint("main", __name__, url_prefix='/')
@@ -643,3 +644,24 @@ def refund_reservation(email, mul_no):
             return redirect(url_for('main.check_reservation', email=user.email))
     
     return render_template("user/refund_reservation.html", user=user)
+
+@bp.route("/change_password/<email>", methods=["GET", "POST"])
+def change_password(email):
+    user = User.query.filter_by(email=email).first()
+    form = ChangePasswordForm()
+    
+    if request.method == "POST" and form.validate_on_submit():
+        if check_password_hash(user.password, form.new_password1.data):
+            flash("이전 비밀번호와 새 비밀번호가 일치합니다.")
+            return redirect("#")
+        if check_password_hash(user.password, form.before_password.data):
+            user.password = generate_password_hash(form.new_password1.data)
+            user.password_date = datetime.date.today()
+            db.session.commit()
+            flash("비밀번호 변경이 완료되었습니다. 바뀐 비밀번호로 로그인해주세요.")
+            return redirect(url_for("auth.login_form"))
+        else:
+            flash("이전 비밀번호가 일치하지 않습니다.")
+            return redirect("#")
+    
+    return render_template("user/change_password.html", user=user, form=form)

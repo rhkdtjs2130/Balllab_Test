@@ -1,8 +1,10 @@
+import datetime
+
 from flask import Blueprint, url_for, render_template, flash, request, session, g, flash
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import redirect
 
-from app.forms import UserLoginForm, UserCreateForm
+from app.forms import UserLoginForm, UserCreateForm, AgreementForm, FindPassword
 from app.models import User
 from app import db
 
@@ -16,6 +18,8 @@ def login_form():
         user = User.query.filter_by(phone=form.phone.data).first()
         if not user:
             error = "존재하지 않는 사용자입니다."
+        elif (form.password.data == "0000") and (user.password == "0000"):
+            return redirect(url_for("auth.signup_0000", phone=user.phone)) ## 정보 추가 페이지 가도록
         elif not check_password_hash(user.password, form.password.data):
             error = "비밀번호가 올바르지 않습니다."
         if error is None:
@@ -29,9 +33,18 @@ def login_form():
         flash(error)
     return render_template("auth/login.html", form=form)
 
-@bp.route('/agreement/')
+@bp.route('/agreement/', methods=['GET', 'POST'])
 def signup_agreement():
-    return render_template("auth/signup_agreement.html")
+    form = AgreementForm()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        if form.agree_1.data == "1" and form.agree_2.data == "1":
+            return redirect(url_for("auth.signup"))
+        else:
+            flash("동의를 하지 않으면 현재는 가입이 불가능합니다.")
+            return redirect(url_for("auth.login_form"))
+    
+    return render_template("auth/signup_agreement.html", form=form)
 
 @bp.route('/signup/', methods=('GET', 'POST'))
 def signup():
@@ -45,6 +58,8 @@ def signup():
                 username=form.username.data,
                 birth=form.birth.data,
                 password=generate_password_hash(form.password1.data),
+                password_date=datetime.date.today(),
+                register_date=datetime.date.today(),
             )
             db.session.add(user)
             db.session.commit()
@@ -82,3 +97,33 @@ def admin_login_form():
                 return redirect(url_for('admin.admin_menu', email=user.email))
         flash(error)
     return render_template("auth/login_admin.html", form=form)
+
+@bp.route('/signup_0000/<phone>', methods=["GET", "POST"])
+def signup_0000(phone):
+    form = UserCreateForm()
+    user = User.query.filter_by(phone=phone).first()
+    if request.method == "POST" and form.validate_on_submit():
+        user.email = form.email.data
+        user.password = generate_password_hash(form.password1.data)
+        user.password_date = datetime.date.today()
+        db.session.commit()
+        flash("연동이 완료되었습니다. 바뀐 정보로 로그인해주세요.")
+        return redirect(url_for("auth.login_form"))
+    return render_template("auth/signup_0000.html", user=user, form=form)
+
+@bp.route('/find_password/', methods=["GET", "POST"])
+def find_password():
+    form = FindPassword()
+    if request.method == "POST" and form.validate_on_submit():
+        user = User.query.filter_by(phone=form.phone.data).first()
+        if not user:
+            flash("회원 정보가 없습니다.")
+            return redirect(url_for("auth.login_form"))
+        if user.email != form.email.data:
+            flash("회원 정보가 일치하지 않습니다.")
+            return redirect(url_for("auth.login_form"))
+        user.password = "0000"
+        db.session.commit()
+        flash("비밀번호가 0000으로 초기화 되었습니다. 로그인하시면 비밀번호 변경 페이지로 이동합니다.")
+        return redirect(url_for("auth.login_form"))
+    return render_template("auth/find_password.html", form=form)

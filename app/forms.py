@@ -54,3 +54,16 @@ class ReserveCourtTimeForm(FlaskForm):
 class DoorOpenForm(FlaskForm):
     area = StringField("Area")
     time = StringField("Time")
+    
+class ChangePasswordForm(FlaskForm):
+    before_password = PasswordField("이전 비밀번호", validators=[DataRequired("이전 비밀번호를 입력해주세요.")])
+    new_password1 = PasswordField('새로 사용할 비밀번호', validators=[DataRequired("비밀번호가 일치하지 않습니다."), EqualTo('new_password2', '비밀번호가 일치하지 않습니다')])
+    new_password2 = PasswordField('새로 사용할 비밀번호 확인', validators=[DataRequired("비밀번호가 일치하지 않습니다.")])
+    
+class AgreementForm(FlaskForm):
+    agree_1 = StringField('볼랩 이용약관 (필수)', validators=[DataRequired("체크가 필요합니다")])
+    agree_2 = StringField('개인정보 수집 및 이용 동의 (선택)')
+    
+class FindPassword(FlaskForm):
+    phone = StringField('핸드폰 번호', validators=[DataRequired("핸드폰 번호를 입력해주세요. 010-1234-5678 -> 01012345678"), Length(min=11, max=11)])
+    email = EmailField('이메일', validators=[DataRequired("이메일 주소를 입력해주세요."), Email()])

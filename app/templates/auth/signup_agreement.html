@@ -4,26 +4,31 @@
     <br>
     <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 250px;">
     <h2 class="my-3 border-bottom pb-2">회원가입</h2>
-
-    <div class="mb-3">
-        <input type="checkbox"> (주)볼랩 이용약관 (필수)</input>
-        <div class="overflow-scroll bg-secondary bg-opacity-25 rounded-3" style="height: 100px">
-            {% include "auth/agreement_1.html" %}
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="mb-3">
+            <input type="checkbox" name="agree_1" value="1"> (주)볼랩 이용약관 (필수)</input>
+            <div class="overflow-scroll bg-secondary bg-opacity-25 rounded-3" style="height: 100px">
+                {% include "auth/agreement_1.html" %}
+            </div>
+            
         </div>
-        
-    </div>
-    <div class="mb-3">
-        <input type="checkbox"> 개인정보 수집 및 이용 동의(필수)</input>
-        <div class="overflow-scroll bg-secondary bg-opacity-25 rounded-3" style="height: 100px">
-            {% include "auth/agreement_2.html" %}
+    
+        <div class="mb-3">
+            <input type="checkbox" name="agree_2" value="1"> 개인정보 수집 및 이용 동의(선택)</input>
+            <div class="overflow-scroll bg-secondary bg-opacity-25 rounded-3" style="height: 100px">
+                {% include "auth/agreement_2.html" %}
+            </div>
         </div>
-    </div>
+    
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                제출 하기
+            </button>
+        </div> 
+    </form>
 
-    <div class="d-grid gap-2 d-md-block">
-        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary">
-            모두 동의
-        </a>
-    </div> 
 </div>
 
 {% endblock %}

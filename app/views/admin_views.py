@@ -12,7 +12,7 @@ from time import sleep
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
-from app.forms import DoorOpenForm
+from app.forms import DoorOpenForm, FilterReservationForm
 
 timetable = [
     "00:00 ~ 00:30",
@@ -88,7 +88,7 @@ def door_list(email):
     
     return  render_template("admin/door_list.html", user=user, form=form)
 
-@bp.route('/admin_reservation/<email>', methods=["GET"])
+@bp.route('/admin_reservation/<email>', methods=["GET", "POST"])
 def admin_reservation(email):
     date = datetime.date.today()
     
@@ -100,7 +100,19 @@ def admin_reservation(email):
         .order_by(ReserveCourt.time)\
         .all()
     
-    return  render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable)
+    form = FilterReservationForm()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        reservation_table = ReserveCourt.query.filter_by(
+                buy=1, 
+                username=form.username.data, 
+            ).filter(ReserveCourt.date == form.date.data)\
+            .order_by(ReserveCourt.date)\
+            .order_by(ReserveCourt.time)\
+            .all()
+        
+    
+    return  render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form, cur_date=date)
 
 @bp.route("/admin/refund_reservation/<email>/<mul_no>", methods=["GET", "POST"])
 def refund_reservation(email, mul_no):

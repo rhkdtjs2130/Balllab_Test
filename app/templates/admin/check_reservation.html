@@ -25,6 +25,30 @@
         <b>예약 관리</b>
     </h5>
 
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="bg-light mx-5">
+            
+            <div class="d-grid gap-2">
+                <label for="date">날짜</label>
+                <input class="pickdate" type="date" name="date" value="{{ cur_date }}" style="width:100%;">
+            </div>
+            <br>
+            <div class="mb-3">
+                <label for="username">회원명</label>
+                <input type="text" class="form-control" name="username" id="username"
+                    value="{{ form.username.data or '' }}">
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-outline-success">
+                    검색
+                </button>
+            </div>
+        </div>
+    </form>
+
     <div class="mx-1">
         <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
             {% if reservation_table|length !=0 %}

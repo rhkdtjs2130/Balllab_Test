@@ -68,3 +68,7 @@ class AgreementForm(FlaskForm):
 class FindPassword(FlaskForm):
     phone = StringField('핸드폰 번호', validators=[DataRequired("핸드폰 번호를 입력해주세요. 010-1234-5678 -> 01012345678"), Length(min=11, max=11)])
     email = EmailField('이메일', validators=[DataRequired("이메일 주소를 입력해주세요."), Email()])
+    
+class FilterReservationForm(FlaskForm):
+    username = StringField('실명', validators=[DataRequired("회원명을 입력해주세요."), Length(min=3, max=25)])
+    date = DateField("날짜", validators=[DataRequired("날짜를 선택해주세요.")])

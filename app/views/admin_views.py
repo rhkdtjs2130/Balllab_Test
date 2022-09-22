@@ -110,7 +110,7 @@ def admin_reservation(email):
             .order_by(ReserveCourt.date)\
             .order_by(ReserveCourt.time)\
             .all()
-        
+        date = form.date.data
     
     return  render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form, cur_date=date)
 

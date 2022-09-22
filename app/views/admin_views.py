@@ -152,3 +152,7 @@ def refund_reservation(email, mul_no):
         return redirect(url_for('admin.admin_reservation', email=admin.email))
     
     return render_template("admin/refund_reservation.html", admin=admin)
+
+@bp.route('/admin/reservation_onoff', methods=['GET', 'POST'])
+def reservation_onoff():
+    return None

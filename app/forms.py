@@ -62,7 +62,8 @@ class ChangePasswordForm(FlaskForm):
     
 class AgreementForm(FlaskForm):
     agree_1 = StringField('볼랩 이용약관 (필수)', validators=[DataRequired("체크가 필요합니다")])
-    agree_2 = StringField('개인정보 수집 및 이용 동의 (선택)')
+    agree_2 = StringField('개인정보 수집 및 이용 동의 (필수)', validators=[DataRequired("체크가 필요합니다.")])
+    agree_3 = StringField('수집된 개인정보의 광고 및 홍보목적에 대한 동의(선택)')
     
 class FindPassword(FlaskForm):
     phone = StringField('핸드폰 번호', validators=[DataRequired("핸드폰 번호를 입력해주세요. 010-1234-5678 -> 01012345678"), Length(min=11, max=11)])

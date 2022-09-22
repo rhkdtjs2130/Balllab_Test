@@ -39,15 +39,19 @@ def signup_agreement():
     
     if request.method == 'POST' and form.validate_on_submit():
         if form.agree_1.data == "1" and form.agree_2.data == "1":
-            return redirect(url_for("auth.signup"))
+            if form.agree_3.data is None:
+                agree_3 = 0
+            else:
+                agree_3 = 1
+            return redirect(url_for("auth.signup", agree_3=agree_3))
         else:
             flash("동의를 하지 않으면 현재는 가입이 불가능합니다.")
             return redirect(url_for("auth.login_form"))
     
     return render_template("auth/signup_agreement.html", form=form)
 
-@bp.route('/signup/', methods=('GET', 'POST'))
-def signup():
+@bp.route('/signup/<agree_3>', methods=('GET', 'POST'))
+def signup(agree_3):
     form = UserCreateForm()
     if request.method == 'POST' and form.validate_on_submit():
         user = User.query.filter_by(phone=form.phone.data).first()
@@ -60,6 +64,7 @@ def signup():
                 password=generate_password_hash(form.password1.data),
                 password_date=datetime.date.today(),
                 register_date=datetime.date.today(),
+                agreement_option=int(agree_3)
             )
             db.session.add(user)
             db.session.commit()

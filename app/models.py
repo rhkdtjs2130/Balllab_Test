@@ -11,6 +11,7 @@ class User(db.Model):
     point = db.Column(db.Integer, nullable=False, server_default="0")
     user_type = db.Column(db.Integer, nullable=False, server_default="0")
     agreement = db.Column(db.Integer, nullable=False, server_default="1")
+    agreement_option = db.Column(db.Integer, nullable=False, server_default="1")
     register_date = db.Column(db.Date, nullable=False, server_default="2022-09-21")
     
 class BuyPoint(db.Model):
@@ -56,3 +57,9 @@ class DoorStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     area = db.Column(db.String(120), unique=True, nullable=False)
     status = db.Column(db.String(120), nullable=False, server_default='0')
+    
+class ReservationStatus(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    area = db.Column(db.String(120), unique=True, nullable=False)
+    status = db.Column(db.String(120), nullable=False, server_default='0')
+    

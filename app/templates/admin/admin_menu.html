@@ -15,7 +15,7 @@
             원격 도어락 열기
         </a>
 
-        <a href="#" class="btn btn-primary my-1 btn-lg">
+        <a href="{{ url_for('admin.user_check', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
             회원 관리
         </a>
 

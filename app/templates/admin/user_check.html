@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+    $('.checkbox_limit').on('change', function() {
+    if($('.checkbox_limit:checked').length > 2) {
+        this.checked = false;
+    }
+    });
+</script>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 150px;">
+    <br>
+    <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
+        <b>예약 관리</b>
+    </h5>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="bg-light mx-4">
+            <div class="mb-3">
+                <label for="username"><b>회원명</b></label>
+                <input type="text" class="form-control" name="username" id="username"
+                    value="{{ form.username.data or '' }}">
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-outline-success">
+                    검색
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <div class="mx-1">
+        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
+            {% for user in user_table %}
+            <div class="border p-3 rounded-start bg-light">
+                <div class="border p-3 rounded bg-white">
+                    <h4 style="color: mediumslateblue;">
+                        <b>
+                            {{ user.username }}
+                        </b>
+                    </h4>
+                    <h6  style="color: grey">
+                        Phone: {{ user.phone }}
+                    </h6>
+                    <h6  style="color: grey">
+                        Point: {{ user.point }}
+                    </h6>
+                    <div class="d-grid gap-2 my-2">
+                        <a href="{{ url_for('admin.change_user_info', admin_email=admin.email, user_phone=user.phone) }}" class="btn btn-success">회원 정보 및 포인트 관리</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.admin_menu', email=admin.email) }}" class="btn btn-primary">확인</a>
+    </div>
+
+
+</div>
+
+{% endblock %}

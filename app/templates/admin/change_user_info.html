@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">회원 정보 및 포인트 관리</h5>
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="mb-3">
+            <label for="username">회원명</label>
+            <input type="text" class="form-control" name="username" id="username"
+                   value="{{ user.username }}">
+        </div>
+        <div class="mb-3">
+            <label for="phone">핸드폰 번호</label>
+            <input type="text" class="form-control" name="phone" id="phone"
+                   value="{{ user.phone }}">
+        </div>
+        <div class="mb-3">
+            <label for="birth">생년월일</label>
+            <input type="text" class="form-control" name="birth" id="birth"
+                   value="{{ user.birth }}">
+        </div>
+        <div class="mb-3">
+            <label for="point">Point</label>
+            <input type="text" class="form-control" name="point" id="point"
+                   value="{{ user.point }}">
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                수정 하기
+            </button>
+        </div>
+    </form>
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.user_check', email=admin_email) }}" class="btn btn-success"> 뒤로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

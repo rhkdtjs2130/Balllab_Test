@@ -12,7 +12,7 @@ from time import sleep
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
-from app.forms import DoorOpenForm, FilterReservationForm
+from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm
 
 timetable = [
     "00:00 ~ 00:30",
@@ -168,3 +168,31 @@ def refund_reservation(email, mul_no):
 @bp.route('/admin/reservation_onoff', methods=['GET', 'POST'])
 def reservation_onoff():
     return None
+
+@bp.route('/admin/user_check/<email>', methods=['GET', 'POST'])
+def user_check(email):
+    user_table = User.query.all()
+    admin = User.query.filter_by(email=email).first()
+    form = UserFilterForm()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        user_table = User.query.filter_by(username=form.username.data).all()
+    
+    return render_template("admin/user_check.html", admin=admin, user_table=user_table, form=form)
+
+@bp.route('/admin/user_check/change_user_info/<admin_email>/<user_phone>', methods=['GET', 'POST'])
+def change_user_info(admin_email, user_phone):
+    user = User.query.filter_by(phone=user_phone).first()
+    form = ChangeUserInfoForm()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        user.username = form.username.data
+        user.phone = form.phone.data
+        user.birth = form.birth.data
+        user.point = form.point.data
+        db.session.commit()
+        flash("반영 되었습니다.")
+        user = User.query.filter_by(phone=user_phone).first()
+        
+    
+    return render_template("admin/change_user_info.html", user=user, admin_email=admin_email, form=form)

@@ -3,7 +3,13 @@
 <div class="container">
     <br>
     <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
-    <h5 class="my-3 border-bottom pb-2">로그인</h5>
+    <h4 class="my-3 border-bottom pb-2">로그인</h4>
+
+    <h5>
+        서비스 확장하면서 비밀번호는 0000으로 초기화되었습니다. <br>
+        로그인하시면 비밀번호및 회원정보 변경 페이지로 이동합니다.
+    </h5>
+
     <form method="post">
         {{ form.csrf_token }}
         {% include "form_errors.html" %}

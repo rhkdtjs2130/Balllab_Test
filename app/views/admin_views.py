@@ -10,7 +10,7 @@ from werkzeug.utils import redirect
 from sqlalchemy import desc
 from time import sleep
 
-from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
+from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, GrantPoint
 from app import db
 from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm, ReserveCourtAreaDateForm, ReserveCourtTimeForm, ReserveCourtForm
 
@@ -186,11 +186,27 @@ def change_user_info(admin_email, user_phone):
     form = ChangeUserInfoForm()
     
     if request.method == 'POST' and form.validate_on_submit():
+        diff_point = form.point.data - user.point
+        
         user.username = form.username.data
         user.phone = form.phone.data
         user.birth = form.birth.data
         user.point = form.point.data
         db.session.commit()
+        
+        admin = User.query.filter_by(email=admin_email).first()
+        
+        grant_point = GrantPoint(
+            date=datetime.datetime.today(),
+            admin_name=admin.username,
+            admin_phone=admin.phone,
+            user_name=user.username,
+            user_phone=user.phone,
+            point=diff_point,
+        )
+        db.session.add(grant_point)
+        db.session.commit()
+        
         flash("반영 되었습니다.")
         user = User.query.filter_by(phone=user_phone).first()
         

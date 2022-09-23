@@ -63,3 +63,11 @@ class ReservationStatus(db.Model):
     area = db.Column(db.String(120), unique=True, nullable=False)
     status = db.Column(db.String(120), nullable=False, server_default='0')
     
+class GrantPoint(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.DateTime, unique=False, nullable=False)
+    admin_name = db.Column(db.String(120), unique=False, nullable=False)
+    admin_phone = db.Column(db.String(150), unique=False, nullable=False)
+    user_name = db.Column(db.String(120), unique=False, nullable=False)
+    user_phone = db.Column(db.String(150), unique=False, nullable=False)
+    point = db.Column(db.Integer, nullable=False, server_default="0")

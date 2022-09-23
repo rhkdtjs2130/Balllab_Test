@@ -221,7 +221,7 @@ def reserve_court_area_date(email):
     user = User.query.filter_by(email=email).first()
     today_tmp = datetime.date.today()
     cur_date = today_tmp.strftime("%Y-%m-%d")
-    max_date = (today_tmp + datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+    max_date = (today_tmp + datetime.timedelta(days=7)).strftime("%Y-%m-%d")
     
     if request.method == 'POST' and form.validate_on_submit():
         area = form.area.data

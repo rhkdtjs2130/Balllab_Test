@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+    $('.checkbox_limit').on('change', function() {
+    if($('.checkbox_limit:checked').length > 2) {
+        this.checked = false;
+    }
+    });
+</script>
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h5 class="my-1 border-bottom pb-2 pt-2 text-center">
+        이용하실 시간을 선택해주세요.
+    </h5>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="gap-2 my-3">
+
+            {% for i in range(0, timetable|length) %}
+                <div class="gap-2 my-1 form-check form-switch form-control-lg">
+                {% if i in court_info %}
+                    <input type="checkbox" class="my-1 checkbox_limit form-check-input" disabled name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <div class="d-grid btn btn-outline-danger btn-sm">
+                        <label class="form-check-label" for={{ timetable[i]}}><h5><b>{{ timetable[i] }}</b></h5></label>
+                    </div>
+                    
+                {% else %}
+                    <input type="checkbox" class="my-1 checkbox_limit form-check-input" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                    <div class="d-grid btn btn-outline-success btn-sm">
+                        <label class="form-check-label" for={{ timetable[i]}}><h5><b>{{ timetable[i] }}</b></h5></label>
+                    </div>
+                {% endif %}
+                </div>
+            {% endfor %}
+
+        
+
+        <div class="d-grid gap-2 mb-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+                확 인
+            </button>
+        </div>
+    </form>
+
+
+</div>
+
+{% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="container">
 
     <br>
@@ -8,6 +9,7 @@
     <h3 class="my-3 border-bottom pb-2">
         <b>관리자 메뉴</b>
     </h3>
+    {% include "flash.html" %}
     <br>
 
     <div class="d-grid gap-auto mb-3">
@@ -17,6 +19,10 @@
 
         <a href="{{ url_for('admin.user_check', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
             회원 관리
+        </a>
+
+        <a href="{{ url_for('admin.reserve_court', admin_email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+            코트 예약 (전체)
         </a>
 
         <a href="{{ url_for('admin.admin_reservation', email=user.email) }}" class="btn btn-primary my-1 btn-lg">

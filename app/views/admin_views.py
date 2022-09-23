@@ -12,7 +12,7 @@ from time import sleep
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
 from app import db
-from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm
+from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm, ReserveCourtAreaDateForm, ReserveCourtTimeForm, ReserveCourtForm
 
 timetable = [
     "00:00 ~ 00:30",
@@ -194,5 +194,128 @@ def change_user_info(admin_email, user_phone):
         flash("반영 되었습니다.")
         user = User.query.filter_by(phone=user_phone).first()
         
-    
     return render_template("admin/change_user_info.html", user=user, admin_email=admin_email, form=form)
+
+@bp.route('/admin/reserve_court/<admin_email>/', methods=['GET', 'POST'])
+def reserve_court(admin_email):
+    
+    form = ReserveCourtAreaDateForm()
+    cur_date = datetime.date.today()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        return redirect(url_for('admin.reserve_court_time', admin_email=admin_email, court_area=form.area.data, court_date=form.date.data))
+        
+    return render_template("admin/reserve_court_area_date.html", form=form, cur_date=cur_date)
+
+@bp.route('/admin/reserve_court/time/<court_area>/<court_date>/<admin_email>', methods=['GET', 'POST'])
+def reserve_court_time(admin_email, court_area, court_date):
+    form = ReserveCourtTimeForm()
+    court_info = ReserveCourt.query.filter_by(area=court_area, date=court_date, buy=1).all()
+    court_info = [int(x.time) for x in court_info]
+    
+    if request.method == "POST" and form.validate_on_submit():
+        reserve_times = request.form.getlist("time")
+        return redirect(url_for("admin.reserve_court_check", admin_email=admin_email, court_area=court_area, court_date=court_date, reserve_times=reserve_times))
+    
+    return render_template("admin/reserve_court_time.html", form=form, timetable=timetable, court_info=court_info)
+
+@bp.route("/admin/reserve_court/reserve_court_check/<admin_email>/<court_area>/<court_date>/<reserve_times>/", methods=('GET', 'POST'))
+def reserve_court_check(admin_email, court_area, court_date, reserve_times):
+    form = ReserveCourtForm()
+    
+    user = User.query.filter_by(email=admin_email).first()
+    
+    reserve_times = ast.literal_eval(reserve_times)
+    
+    if type(reserve_times) != int:
+        tmp_list = []
+        for reserv_time in reserve_times:
+            tmp_list.append(int(reserv_time))
+    else:
+        tmp_list = [reserve_times]
+        
+    if len(tmp_list) > 1:
+        total_reserve_time = len(tmp_list) / 2 ## 시간
+    else:
+        total_reserve_time = 0.5
+        
+    if court_area == "어린이대공원점":
+        court_price = 10000
+    else:
+        court_price = 20000
+    
+    total_price = int(total_reserve_time * 2 * court_price)
+    
+    if court_area == "어린이대공원점":
+        total_price = total_price * 3
+        court_nm_list = ['1번', '2번', '3번']
+    else:
+        total_price = total_price * 2
+        court_nm_list = ['3층', '4층']
+    
+    if total_price >= user.point:
+        total_pay = total_price - user.point
+        # used_point = user.point
+    elif user.point > total_price:
+        total_pay = 0
+        # used_point = user.point - total_price
+        
+    if request.method == 'POST':
+        pay_db = PayDB.query.all()
+        for court_nm in court_nm_list:
+            for tmp_time in tmp_list:
+                
+                reserve_check = ReserveCourt.query.filter_by(
+                    date=datetime.datetime.strptime(court_date, "%Y-%m-%d"), 
+                    area=court_area, 
+                    court=court_nm,
+                    time=str(tmp_time),
+                ).first()
+                
+                if reserve_check == None:
+                    ## Reserve Court ##
+                    court_reserve = ReserveCourt(
+                        date = datetime.datetime.strptime(court_date, "%Y-%m-%d"),
+                        area = court_area, 
+                        time = str(tmp_time),
+                        court = court_nm, 
+                        phone = user.phone, 
+                        email = user.email, 
+                        username = user.username,
+                        mul_no = f"point_{len(pay_db)}",
+                        buy = 1, 
+                    )
+                    db.session.add(court_reserve)
+                    db.session.commit()
+                else:
+                    continue
+            
+        pay_add = PayDB(
+            mul_no = f"point_{len(pay_db)}",
+            goodname = "관리자예약",
+            date = datetime.datetime.strptime(court_date, "%Y-%m-%d"),
+            area = court_area,
+            time = str(tmp_list),
+            price = total_pay,
+            used_point = total_price,
+            recvphone = user.phone,
+            pay_date = datetime.datetime.now(), 
+            pay_type = "point_only",
+            pay_state = "4",
+        )
+        
+        db.session.add(pay_add)
+        db.session.commit()
+                    
+        if user.point >= int(total_price):
+            user.point = user.point - int(total_price)
+        else:
+            user.point = 0
+            
+        db.session.commit()
+        
+        flash("예약 되었습니다.")
+        
+        return redirect(url_for("admin.admin_menu", email=admin_email))
+    
+    return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_nm_list, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)

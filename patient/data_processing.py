@@ -26,5 +26,11 @@ columns = [
     'point', 'user_type', 'password_date', 'agreement', 'register_date'
 ]
 
-df_orig[columns].to_csv("patient_list.csv", index=False, encoding='utf-8')
+patient = [
+    '우가현', '박태영', '김준현', '정진규', '이원석', '이일동', '이희빈', '김우경'
+]
+# %%
+df_orig = df_orig.query("~username.isin(@patient)")
+# %%
+df_orig[columns].to_csv("patient_list_2.csv", index=False, encoding='utf-8')
 # %%

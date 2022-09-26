@@ -150,10 +150,9 @@ def buy_point(email):
                 'price': price, 
                 'recvphone': user.phone,
                 "skip_cstpage":"y",
-                "memo": "주식회사볼랩",
+                "memo": f"주식회사볼랩_포인트 0",
                 "var1": date,
-                "var2": time,
-                "feedback_url":"#"
+                "var2": f"point_{time}",
             }
         )
     
@@ -334,7 +333,6 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                     'userid': 'balllab',
                     'goodname': court_name, 
                     'price': total_pay,
-                    # 'price': 1000, 
                     'recvphone': user.phone,
                     "skip_cstpage":"y",
                     "memo": f"{court_area} {used_point}",

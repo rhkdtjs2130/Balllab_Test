@@ -128,6 +128,8 @@ def buy_point(email):
         else:
             time = len(buy_point_list) + 1
         
+        time = f"point_{time}"
+        
         record = BuyPoint(
             phone=user.phone,
             email=user.email,
@@ -152,7 +154,7 @@ def buy_point(email):
                 "skip_cstpage":"y",
                 "memo": f"주식회사볼랩_포인트 0",
                 "var1": date,
-                "var2": f"point_{time}",
+                "var2": time,
             }
         )
     

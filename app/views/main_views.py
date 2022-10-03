@@ -91,7 +91,7 @@ def buy_point(email):
     user = User.query.filter_by(email=email).first()
     date = datetime.date.today()
     
-    point_tables = PointTable.query.all()
+    point_tables = PointTable.query.order_by(PointTable.price).all()
     
     buy_point_list = BuyPoint.query.filter_by(
         email=user.email, 
@@ -148,10 +148,9 @@ def request_pay_point(email, product, price, date, time):
         
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,
-            goodname=product,
-            date=date,
+            goodname=f"{product} LUV",
             time=time,
-        ).all()
+        ).order_by(PayDB.pay_date.desc()).all()
         
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
@@ -195,7 +194,7 @@ def reserve_court_court(email, area, date):
     court = ReserveCourt.query.filter_by(area=area, date=date)
     user = User.query.filter_by(email=email).first()
     
-    court_status_table = ReservationStatus.query.filter_by(area=area, status="1").all()
+    court_status_table = ReservationStatus.query.filter_by(area=area, status="1").order_by(ReservationStatus.id).all()
     
     if request.method == 'POST' and form.validate_on_submit():
         court_area = area
@@ -449,30 +448,37 @@ def pay_check():
         user = User.query.filter_by(phone=request.form['recvphone']).first()
         
         ## Point
-        if request.form['goodname'] == "주식회사볼랩_포인트":
+        if request.form['memo'] == f"주식회사볼랩_포인트 0":
+            
             point_price = int(request.form['price'])
             point_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
             time = request.form['var2']
             
             product = PointTable.query.filter_by(price=point_price).first().point
             
-            record = BuyPoint(
+            is_record = BuyPoint.query.filter_by(
                 phone=user.phone,
-                email=user.email,
-                username= user.username,
-                price=point_price,
-                product=f"{product} LUV",
-                area="주식회사볼랩",
-                date=point_date,
-                buy = 1, 
-                time=time,
-            )
+                time = time,
+            ).first()
             
-            db.session.add(record)
-            db.session.commit()
-            
-            user.point += int(product)
-            db.session.commit()
+            if is_record is None:
+                record = BuyPoint(
+                    phone=user.phone,
+                    email=user.email,
+                    username= user.username,
+                    price=point_price,
+                    product=f"{product} LUV",
+                    area="주식회사볼랩",
+                    date=point_date,
+                    buy = 1, 
+                    time=time,
+                )
+                
+                db.session.add(record)
+                db.session.commit()
+                
+                user.point += int(product)
+                db.session.commit()
             
         ## Regrestration Court
         else:

@@ -352,7 +352,7 @@ def product_management(admin_email):
 @bp.route('/admin/point_price_management/<admin_email>/', methods=['GET', 'POST'])
 def point_price_management(admin_email):
     user = User.query.filter_by(email=admin_email).first()
-    point_table = PointTable.query.all()
+    point_table = PointTable.query.order_by(PointTable.price).all()
     return render_template("admin/point_price_management.html", user=user, point_table=point_table)
 
 @bp.route('/admin/point_price_change_management/<admin_email>/<price>', methods=['GET', 'POST'])
@@ -371,7 +371,7 @@ def point_price_change_management(admin_email, price):
 @bp.route('/admin/court_price_management/<admin_email>/', methods=['GET', 'POST'])
 def court_price_management(admin_email):
     user = User.query.filter_by(email=admin_email).first()
-    court_table = CourtPriceTable.query.all()
+    court_table = CourtPriceTable.query.order_by(CourtPriceTable.id).all()
     return render_template("admin/court_price_management.html", user=user, court_table=court_table)
 
 @bp.route('/admin/court_price_management/<court_area>/<admin_email>/', methods=['GET', 'POST'])
@@ -391,7 +391,7 @@ def court_price_change_management(admin_email, court_area):
 def court_management(admin_email):
     
     user = User.query.filter_by(email=admin_email).first()
-    court_table = CourtList.query.all()
+    court_table = CourtList.query.order_by(CourtList.id).all()
     
     return render_template("admin/court_management.html", user=user, court_table=court_table)
 
@@ -399,7 +399,7 @@ def court_management(admin_email):
 def court_status_management(admin_email, court_area):
     
     user = User.query.filter_by(email=admin_email).first()
-    court_table = ReservationStatus.query.filter_by(area=court_area).all()
+    court_table = ReservationStatus.query.filter_by(area=court_area).order_by(ReservationStatus.id).all()
     
     return render_template("admin/court_status_management.html", user=user, court_table=court_table)
 

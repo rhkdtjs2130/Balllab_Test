@@ -60,8 +60,24 @@ class DoorStatus(db.Model):
     
 class ReservationStatus(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    area = db.Column(db.String(120), unique=True, nullable=False)
+    area = db.Column(db.String(120), unique=False, nullable=False)
+    court = db.Column(db.String(120), unique=False, nullable=False)
+    court_nm = db.Column(db.String(120), unique=False, nullable=False, server_default='0')
     status = db.Column(db.String(120), nullable=False, server_default='0')
+    
+class CourtList(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    area = db.Column(db.String(120), unique=False, nullable=False)
+
+class PointTable(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    price = db.Column(db.Integer, nullable=False, server_default='10000')
+    point = db.Column(db.Integer, nullable=False, server_default='10000')
+    
+class CourtPriceTable(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    area = db.Column(db.String(120), unique=True, nullable=False)
+    price = db.Column(db.Integer, nullable=False, server_default='10000')
     
 class GrantPoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)

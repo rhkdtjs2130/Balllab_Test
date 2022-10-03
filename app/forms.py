@@ -70,8 +70,8 @@ class FindPassword(FlaskForm):
     email = EmailField('이메일', validators=[DataRequired("이메일 주소를 입력해주세요."), Email()])
     
 class FilterReservationForm(FlaskForm):
-    username = StringField('실명', validators=[DataRequired("회원명을 입력해주세요."), Length(min=3, max=25)])
-    date = DateField("날짜", validators=[DataRequired("날짜를 선택해주세요.")])
+    username = StringField('실명')
+    date = DateField("날짜")
 
 class UserFilterForm(FlaskForm):
     username = StringField('실명', validators=[DataRequired("회원명을 입력해주세요."), Length(min=1, max=25)])
@@ -81,3 +81,14 @@ class ChangeUserInfoForm(FlaskForm):
     phone = StringField('핸드폰 번호', validators=[DataRequired("핸드폰 번호를 입력해주세요. 010-1234-5678 -> 01012345678"), Length(min=11, max=11)])
     birth = StringField('생년월일 8자리', validators=[DataRequired("생년월일을 입력해주세요. 1995년 2월 25일 -> 19950225"), Length(min=8, max=8)])
     point = IntegerField("Point", validators=[DataRequired("포인트를 입력해주세요.")])
+    
+class PointManagementForm(FlaskForm):
+    price = IntegerField("Price", validators=[DataRequired("가격")])
+    point = IntegerField("Point", validators=[DataRequired("포인트")])
+    
+class CourtManagementForm(FlaskForm):
+    area = StringField("Area")
+    price = IntegerField("Point", validators=[DataRequired("포인트")])
+    
+class CourtOnOffForm(FlaskForm):
+    status = StringField("Status")

@@ -13,24 +13,23 @@
     <form method="post">
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
-        <div class="d-grid gap-2">
 
-            {% for i in range(0, area_condition|length) %}
-                <input type="radio" class="btn-check my-1" name="court" id={{ i }} autocomplete="off" value={{ area_condition[i] }}>
-                <label class="btn btn-outline-secondary" for={{ i }}>{{ area_condition[i] }}</label>
+        <div class="d-grid gap-2">
+            {% for court_single in court_status_table %}
+                <input type="radio" class="btn-check my-1" name="court" id={{ court_single.id }} autocomplete="off" value={{ court_single.court_nm }}>
+                <label class="btn btn-outline-secondary" for={{ court_single.id }}>{{ court_single.court }}</label>
             {% endfor %}
         </div>
 
         <br>
-
         <br>
+
         <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary">
                 확 인
             </button>
         </div>
     </form>
-
 
 </div>
 

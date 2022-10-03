@@ -29,6 +29,10 @@
             예약 관리
         </a>
 
+        <a href="{{ url_for('admin.product_management', admin_email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+            상품 관리
+        </a>
+
         <a href="{{ url_for('main.login_page') }}" class="btn btn-success my-1 btn-lg">
             돌아 가기
         </a>

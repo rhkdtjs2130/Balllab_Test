@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">회원 정보 및 포인트 관리</h5>
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="mb-3">
+            <label for="court_nm">지점 명</label>
+            <input type="text" class="form-control" name="area" id="area" readonly value="{{ court_table.area }}">
+        </div>
+        <div class="mb-3">
+            <label for="price">Price</label>
+            <input type="text" class="form-control" name="price" id="price" value="{{ court_table.price }}">
+        </div>
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                수정 하기
+            </button>
+        </div>
+    </form>
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.court_price_management', admin_email=user.email) }}" class="btn btn-success"> 뒤로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

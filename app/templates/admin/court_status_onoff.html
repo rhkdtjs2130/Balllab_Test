@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h3 class="my-3 border-bottom pb-2">
+        <b>코트 관리</b>
+    </h3>
+    <br>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+        <div class="gap-2 my-1 form-check form-switch form-control-lg">
+
+            <div class="my-3">
+                <input type="radio" class="my-1 checkbox_limit form-check-input" name="status" id="status_1" autocomplete="off" value="1">
+                <div class="d-grid btn btn-outline-danger btn-sm">
+                    <label class="form-check-label" for="status_1"><h5><b>열기</b></h5></label>
+                </div>
+            </div>
+
+            <div class="my-3">
+                <input type="radio" class="my-1 checkbox_limit form-check-input" name="status" id="status_0" autocomplete="off" value="0">
+                <div class="d-grid btn btn-outline-danger btn-sm">
+                    <label class="form-check-label" for="status_0"><h5><b>닫기</b></h5></label>
+                </div>
+            </div>
+
+        <div class="d-grid gap-2 mb-3 my-3">
+            <button type="submit" class="btn btn-primary btn-lg">
+                확 인
+            </button>
+        </div>
+    </form>
+
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.court_management', admin_email=user.email) }}" class="btn btn-success">확인</a>
+    </div>
+
+</div>
+
+{% endblock %}

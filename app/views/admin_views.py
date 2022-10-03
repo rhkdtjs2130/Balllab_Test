@@ -6,13 +6,12 @@ import datetime
 
 from flask import Blueprint, url_for, render_template, request, flash
 from werkzeug.utils import redirect
-# from datetime import datetime
 from sqlalchemy import desc
 from time import sleep
 
-from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, GrantPoint
+from app.models import User, ReserveCourt, PayDB, GrantPoint, PointTable, CourtPriceTable, ReservationStatus, CourtList
 from app import db
-from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm, ReserveCourtAreaDateForm, ReserveCourtTimeForm, ReserveCourtForm
+from app.forms import DoorOpenForm, FilterReservationForm, UserFilterForm, ChangeUserInfoForm, ReserveCourtAreaDateForm, ReserveCourtTimeForm, ReserveCourtForm, PointManagementForm, CourtManagementForm, CourtOnOffForm
 
 timetable = [
     "00:00 ~ 00:30",
@@ -102,15 +101,35 @@ def admin_reservation(email):
     
     form = FilterReservationForm()
     
-    if request.method == 'POST' and form.validate_on_submit():
-        reservation_table = ReserveCourt.query.filter_by(
-                buy=1, 
-                username=form.username.data, 
-            ).filter(ReserveCourt.date == form.date.data)\
-            .order_by(ReserveCourt.date)\
-            .order_by(ReserveCourt.time)\
-            .all()
-        date = form.date.data
+    if request.method == 'POST':
+        
+        if (form.date.data != None) and (form.username.data != ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                    username=form.username.data, 
+                ).filter(ReserveCourt.date == form.date.data)\
+                .order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data == None) and (form.username.data != ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                    username=form.username.data, 
+                ).order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data != None) and (form.username.data == ""):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                ).filter(ReserveCourt.date == form.date.data)\
+                .order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
     
     return  render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form, cur_date=date)
 
@@ -164,10 +183,6 @@ def refund_reservation(email, mul_no):
         return redirect(url_for('admin.admin_reservation', email=admin.email))
     
     return render_template("admin/refund_reservation.html", admin=admin)
-
-@bp.route('/admin/reservation_onoff', methods=['GET', 'POST'])
-def reservation_onoff():
-    return None
 
 @bp.route('/admin/user_check/<email>', methods=['GET', 'POST'])
 def user_check(email):
@@ -255,26 +270,19 @@ def reserve_court_check(admin_email, court_area, court_date, reserve_times):
     else:
         total_reserve_time = 0.5
         
-    if court_area == "어린이대공원점":
-        court_price = 10000
-    else:
-        court_price = 20000
+    court_price = CourtPriceTable.query.filter_by(area = court_area).first().price
     
     total_price = int(total_reserve_time * 2 * court_price)
     
-    if court_area == "어린이대공원점":
-        total_price = total_price * 3
-        court_nm_list = ['1번', '2번', '3번']
-    else:
-        total_price = total_price * 2
-        court_nm_list = ['3층', '4층']
+    court_tmp = ReservationStatus.query.filter_by(area=court_area).all()
+    court_nm_list = [court.court_nm for court in court_tmp]
+    
+    total_price = total_price * len(court_nm_list)
     
     if total_price >= user.point:
         total_pay = total_price - user.point
-        # used_point = user.point
     elif user.point > total_price:
         total_pay = 0
-        # used_point = user.point - total_price
         
     if request.method == 'POST':
         pay_db = PayDB.query.all()
@@ -335,3 +343,81 @@ def reserve_court_check(admin_email, court_area, court_date, reserve_times):
         return redirect(url_for("admin.admin_menu", email=admin_email))
     
     return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_nm_list, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
+
+@bp.route('/admin/product_management/<admin_email>/', methods=['GET', 'POST'])
+def product_management(admin_email):
+    user = User.query.filter_by(email=admin_email).first()
+    return render_template("admin/product_management.html", user=user)
+
+@bp.route('/admin/point_price_management/<admin_email>/', methods=['GET', 'POST'])
+def point_price_management(admin_email):
+    user = User.query.filter_by(email=admin_email).first()
+    point_table = PointTable.query.all()
+    return render_template("admin/point_price_management.html", user=user, point_table=point_table)
+
+@bp.route('/admin/point_price_change_management/<admin_email>/<price>', methods=['GET', 'POST'])
+def point_price_change_management(admin_email, price):
+    form = PointManagementForm()
+    user = User.query.filter_by(email=admin_email).first()
+    point_table = PointTable.query.filter_by(price=price).first()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        point_table.point = form.point.data
+        db.session.commit()
+        flash("수정 완료되었습니다.")
+    
+    return render_template("admin/point_price_change_management.html", user=user, point_table=point_table, form=form)
+
+@bp.route('/admin/court_price_management/<admin_email>/', methods=['GET', 'POST'])
+def court_price_management(admin_email):
+    user = User.query.filter_by(email=admin_email).first()
+    court_table = CourtPriceTable.query.all()
+    return render_template("admin/court_price_management.html", user=user, court_table=court_table)
+
+@bp.route('/admin/court_price_management/<court_area>/<admin_email>/', methods=['GET', 'POST'])
+def court_price_change_management(admin_email, court_area):
+    form = CourtManagementForm()
+    user = User.query.filter_by(email=admin_email).first()
+    court_table = CourtPriceTable.query.filter_by(area=court_area).first()
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        court_table.price = form.price.data
+        db.session.commit()
+        flash("수정 완료되었습니다.")
+        
+    return render_template("admin/court_price_change_management.html", user=user, court_table=court_table, form=form)
+
+@bp.route('/admin/court_management/<admin_email>/', methods=['GET', 'POST'])
+def court_management(admin_email):
+    
+    user = User.query.filter_by(email=admin_email).first()
+    court_table = CourtList.query.all()
+    
+    return render_template("admin/court_management.html", user=user, court_table=court_table)
+
+@bp.route('/admin/court_status_management/<court_area>/<admin_email>/', methods=['GET', 'POST'])
+def court_status_management(admin_email, court_area):
+    
+    user = User.query.filter_by(email=admin_email).first()
+    court_table = ReservationStatus.query.filter_by(area=court_area).all()
+    
+    return render_template("admin/court_status_management.html", user=user, court_table=court_table)
+
+@bp.route('/admin/court_onoff/<court_area>/<court_nm>/<admin_email>/', methods=['GET', 'POST'])
+def court_status_onoff(admin_email, court_area, court_nm):
+    
+    form = CourtOnOffForm()
+    
+    user = User.query.filter_by(email=admin_email).first()
+    court_table = ReservationStatus.query.filter_by(area=court_area, court_nm=court_nm).first()
+    
+    if request.method == "POST" and form.validate_on_submit():
+        court_table.status = form.status.data
+        db.session.commit()
+        
+        if form.status.data == "1":
+            flash("예약 오픈 되었습니다.")  
+        else:
+            flash("예약 클로즈 되었습니다.")  
+    
+    return render_template("admin/court_status_onoff.html", user=user, court_table=court_table, form=form)

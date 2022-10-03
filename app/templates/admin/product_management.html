@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h3 class="my-3 border-bottom pb-2">
+        <b>관리자 메뉴</b>
+    </h3>
+    {% include "flash.html" %}
+    <br>
+
+    <div class="d-grid gap-auto mb-3">
+        <a href="{{ url_for('admin.point_price_management', admin_email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+            포인트 가격 관리
+        </a>
+
+        <a href="{{ url_for('admin.court_price_management', admin_email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+            코트 가격 관리
+        </a>
+
+        <a href="{{ url_for('admin.court_management', admin_email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+            코트 관리
+        </a>
+
+    </div> 
+
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.admin_menu', email=user.email) }}" class="btn btn-success">확인</a>
+    </div>
+
+</div>
+
+{% endblock %}

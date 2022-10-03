@@ -2,41 +2,19 @@ import urllib
 import ast
 import requests
 import datetime
+import ast
 
 from flask import Blueprint, url_for, render_template, request, flash
 from werkzeug.utils import redirect
 from werkzeug.security import check_password_hash, generate_password_hash
-# from datetime import datetime
 from sqlalchemy import desc
 from time import sleep
 
-from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus
+from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, PointTable, CourtPriceTable, ReservationStatus
 from app import db
 from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm
-from ..qr_generate import make_qr_code, decode_qr
 
 bp = Blueprint("main", __name__, url_prefix='/')
-
-price_to_point_dict = {
-    10000:"10000 LUV",
-    30000:"33000 LUV",
-    50000:"55000 LUV",
-    70000:"77000 LUV",
-    100000:"110000 LUV", 
-}
-
-price_to_point = {
-    10000:10000,
-    30000:33000,
-    50000:55000,
-    70000:77000,
-    100000:110000, 
-}
-
-area_to_court_dict = {
-    "어린이대공원점": ['1번 코트', '2번 코트', '3번 코트'], 
-    "성수자양점": ['3층 (1번코트)', '4층 (2번 코트)']
-}
 
 timetable = [
     "00:00 ~ 00:30",
@@ -113,6 +91,8 @@ def buy_point(email):
     user = User.query.filter_by(email=email).first()
     date = datetime.date.today()
     
+    point_tables = PointTable.query.all()
+    
     buy_point_list = BuyPoint.query.filter_by(
         email=user.email, 
         date=date,
@@ -121,7 +101,7 @@ def buy_point(email):
     if request.method == "POST" and form.validate_on_submit():
         
         price = form.price.data
-        product = price_to_point_dict[price]
+        product = PointTable.query.filter_by(price=price).first().point
         
         if len(buy_point_list) == 0:
             time = 1
@@ -141,6 +121,7 @@ def buy_point(email):
             time=time,
             buy=0,
         )
+        
         db.session.add(record)
         db.session.commit()
         
@@ -148,7 +129,7 @@ def buy_point(email):
             {
                 'cmd': 'payrequest',
                 'userid': 'balllab',
-                'goodname': product, 
+                'goodname': f"{product} LUV", 
                 'price': price, 
                 'recvphone': user.phone,
                 "skip_cstpage":"y",
@@ -171,7 +152,7 @@ def buy_point(email):
         else:
             redirect("#")
         
-    return  render_template("user/buy_point.html", user=user, form=form)
+    return  render_template("user/buy_point.html", user=user, form=form, point_tables=point_tables)
 
 
 @bp.route('/user_menu/<email>/<product>/<price>/<date>/<time>/request_pay/point', methods=('GET', 'POST'))
@@ -187,18 +168,8 @@ def request_pay_point(email, product, price, date, time):
             time=time,
         ).all()
         
-        buypointcheck = BuyPoint.query.filter_by(
-            email=user.email,
-            date=date,
-            time=time,
-        ).all()
-        
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
-                user.point += price_to_point[int(price)]
-                buypointcheck[0].buy = 1
-                db.session.commit()
-                    
                 return redirect(url_for("main.confirm_pay", email=user.email))
         else:
             flash("결제가 완료되지 않았습니다.")
@@ -231,7 +202,7 @@ def reserve_court_area_date(email):
     
     return render_template("user/reserve_court_area_date.html", form=form, cur_date=cur_date, max_date=max_date)
 
-@bp.route("/user_menu/<email>/<area>/<date>/reserve_court/select_court_court", methods=('GET', 'POST'))
+@bp.route("/user_menu/<email>/<area>/<date>/reserve_court/select_court", methods=('GET', 'POST'))
 def reserve_court_court(email, area, date):
     form = ReserveCourtCourtForm()
     
@@ -239,7 +210,7 @@ def reserve_court_court(email, area, date):
     court = ReserveCourt.query.filter_by(area=area, date=date)
     user = User.query.filter_by(email=email).first()
     
-    area_condition = area_to_court_dict[area]
+    court_status_table = ReservationStatus.query.filter_by(area=area, status="1").all()
     
     if request.method == 'POST' and form.validate_on_submit():
         court_area = area
@@ -247,7 +218,7 @@ def reserve_court_court(email, area, date):
         court_name = form.court.data
         return redirect(url_for("main.reserve_court_time", email=user.email, court_area=court_area, court_date=court_date, court_name=court_name))
     
-    return render_template("user/reserve_court_court.html", form=form, area_condition=area_condition, court=court)
+    return render_template("user/reserve_court_court.html", form=form, court_status_table=court_status_table, court=court)
 
 @bp.route("/user_menu/<email>/<court_area>/<court_date>/<court_name>/select_time", methods=('GET', 'POST'))
 def reserve_court_time(email, court_area, court_date, court_name):
@@ -284,11 +255,8 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
         total_reserve_time = len(tmp_list) / 2 ## 시간
     else:
         total_reserve_time = 0.5
-        
-    if court_area == "어린이대공원점":
-        court_price = 10000
-    else:
-        court_price = 20000
+    
+    court_price = CourtPriceTable.query.filter_by(area = court_area).first().price
     
     total_price = int(total_reserve_time * 2 * court_price)
     
@@ -337,7 +305,7 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                     'price': total_pay,
                     'recvphone': user.phone,
                     "skip_cstpage":"y",
-                    "memo": f"{court_area} {used_point}",
+                    "memo": f"{court_area} {used_point} {total_price}",
                     "var1": court_date,
                     "var2": str(tmp_list),
                 }
@@ -380,26 +348,10 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 time=time, 
                 price=total_pay,
                 used_point=str(int(total_price) - int(total_pay)),
-                # price=1000,
             ).order_by(PayDB.mul_no.desc()).first()
             
-            if paycheck != None:        
-                if paycheck.pay_state == "4":
-                    
-                    for reservation in reservation_table:
-                        reservation.buy = 1
-                        reservation.mul_no = paycheck.mul_no
-                        
-                        db.session.commit()
-                        
-                    if user.point >= int(total_price):
-                        user.point = user.point - int(total_price)
-                    else:
-                        user.point = 0
-                        
-                    db.session.commit()
-                        
-                    return redirect(url_for("main.confirm_pay", email=user.email))
+            if paycheck != None:
+                return redirect(url_for("main.confirm_pay", email=user.email))
             else:
                 flash("결제가 완료되지 않았습니다.")
                 return redirect("#")
@@ -508,6 +460,62 @@ def pay_check():
             
         db.session.add(db_update)
         db.session.commit()
+        
+        user = User.query.filter_by(phone=request.form['recvphone']).first()
+        
+        ## Point
+        if request.form['goodname'] == "주식회사볼랩_포인트":
+            point_price = request.form['price']
+            point_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
+            time = request.form['var2']
+            
+            product = PointTable.query.filter_by(price=point_price).first().point
+            
+            record = BuyPoint(
+                phone=user.phone,
+                email=user.email,
+                username= user.username,
+                price=point_price,
+                product=f"{product} LUV",
+                area="주식회사볼랩",
+                date=point_date,
+                time=time,
+                buy=0,
+            )
+            db.session.add(record)
+            db.session.commit()
+            
+            user.point += int(product)
+            db.session.commit()
+            
+        ## Regrestration Court
+        else:
+            registration_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
+            registration_area =  request.form['memo'].split()[0]
+            registration_court = request.form['goodname']
+            registration_time = ast.literal_eval(request.form['var2'])
+            registration_total_price = request.form['memo'].split()[2]
+            
+            reservation_table = ReserveCourt.query.filter_by(
+                phone=request.form['recvphone'],
+                date=registration_date, 
+                area=registration_area, 
+                court=registration_court
+            ).filter(ReserveCourt.time.in_(registration_time)).all()
+            
+            for reservation in reservation_table:
+                reservation.buy = 1
+                reservation.mul_no = request.form['mul_no']
+                
+                db.session.commit()
+                
+            if user.point >= int(registration_total_price):
+                user.point = user.point - int(registration_total_price)
+            else:
+                user.point = 0
+                
+            db.session.commit()
+        
         return "SUCCESS"
     
     elif (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "9" or request.form['pay_state'] == "64"):
@@ -519,34 +527,6 @@ def pay_check():
         
     else:
         return "FAIL"
-    
-    
-@bp.route("/user_menu/get_qrcode/<email>/<date>/<time>", methods=["GET"])
-def get_qrcode(email, date, time):
-    user = User.query.filter_by(email=email).first()
-    
-    reservation_table = ReserveCourt.query.filter_by(email=email, date=date, time=time, buy=1).first()
-    
-    return render_template("user/get_qrcode.html", user=user, reservation_table=reservation_table)
-
-
-@bp.route("/user/qrcode_check", methods=["POST"])
-def qrcode_check():
-    print(request.form)
-    reservation_check = ReserveCourt.query.filter_by(
-        area=request.form['area'],
-        date=request.form['date'],
-        time=request.form['time'],
-        court=request.form['court'],
-        email=request.form['email'],
-        buy=1
-    ).all()
-    
-    if len(reservation_check) == 1:
-        return {'result': 1}
-    else:
-        return {'result': 0}
-    
 
 ## Door Open
 @bp.route("/door_open", methods=["POST"])

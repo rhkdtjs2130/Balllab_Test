@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">관리할 포인트 비율을 클릭하세요.</h5>
+
+    <div class="gap-2 my-3">
+        {% for point in point_table %}
+            <a href="{{ url_for('admin.point_price_change_management', admin_email=user.email, price=point.price) }}" class="d-grid btn btn-primary my-3 btn-lg">
+                {{ point.price }} 원
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.product_management', admin_email=user.email) }}" class="btn btn-success"> 뒤로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

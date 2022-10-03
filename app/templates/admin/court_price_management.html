@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">가격을 관리할 지점을 선택하세요.</h5>
+
+    <div class="gap-2 my-3">
+        {% for court in court_table %}
+            <a href="{{ url_for('admin.court_price_change_management', admin_email=user.email, court_area=court.area) }}" class="d-grid btn btn-primary my-3 btn-lg">
+                {{ court.area }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('admin.product_management', admin_email=user.email) }}" class="btn btn-success"> 뒤로 돌아가기</a>
+    </div>
+</div>
+{% endblock %}

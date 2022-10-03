@@ -450,7 +450,7 @@ def pay_check():
         
         ## Point
         if request.form['goodname'] == "주식회사볼랩_포인트":
-            point_price = request.form['price']
+            point_price = int(request.form['price'])
             point_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
             time = request.form['var2']
             

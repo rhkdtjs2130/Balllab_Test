@@ -471,7 +471,7 @@ def pay_check():
             
             product = PointTable.query.filter_by(price=point_price).first().point
             
-            record = BuyPoint.query.filter_by(
+            record = BuyPoint(
                 phone=user.phone,
                 email=user.email,
                 username= user.username,
@@ -479,9 +479,11 @@ def pay_check():
                 product=f"{product} LUV",
                 area="주식회사볼랩",
                 date=point_date,
-            ).first()
+                buy = 1, 
+                time=time,
+            )
             
-            record.buy = 1
+            db.session.add(record)
             db.session.commit()
             
             user.point += int(product)

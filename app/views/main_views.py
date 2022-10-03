@@ -110,21 +110,6 @@ def buy_point(email):
         
         time = f"point_{time}"
         
-        record = BuyPoint(
-            phone=user.phone,
-            email=user.email,
-            username= user.username,
-            price=price,
-            product=f"{product} LUV",
-            area="주식회사볼랩",
-            date=date,
-            time=time,
-            buy=0,
-        )
-        
-        db.session.add(record)
-        db.session.commit()
-        
         post_data = (
             {
                 'cmd': 'payrequest',

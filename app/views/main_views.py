@@ -95,7 +95,7 @@ def buy_point(phone):
     
     buy_point_list = BuyPoint.query.filter_by(
         phone=user.phone, 
-        date=date,
+        # date=date,
     ).all()
     
     if request.method == "POST" and form.validate_on_submit():

@@ -462,6 +462,11 @@ def pay_check():
             ).first()
             
             if is_record is None:
+                ## Assgin Point First
+                user.point += int(product)
+                db.session.commit()
+                
+                ## Add Logs
                 record = BuyPoint(
                     phone=user.phone,
                     email=user.email,
@@ -475,9 +480,6 @@ def pay_check():
                 )
                 
                 db.session.add(record)
-                db.session.commit()
-                
-                user.point += int(product)
                 db.session.commit()
             
         ## Regrestration Court

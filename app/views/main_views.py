@@ -80,21 +80,21 @@ door_map_dict = {
 def login_page():
     return redirect(url_for("auth.login_form"))
 
-@bp.route('/user_menu/<email>')
-def user_menu(email):
-    user = User.query.filter_by(email=email).first()
+@bp.route('/user_menu/<phone>')
+def user_menu(phone):
+    user = User.query.filter_by(phone=phone).first()
     return  render_template("user/user_menu.html", user=user)
 
-@bp.route('/user_menu/<email>/buy_point/', methods=('GET', 'POST'))
-def buy_point(email):
+@bp.route('/user_menu/<phone>/buy_point/', methods=('GET', 'POST'))
+def buy_point(phone):
     form = BuyPointForm()
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     date = datetime.date.today()
     
     point_tables = PointTable.query.order_by(PointTable.price).all()
     
     buy_point_list = BuyPoint.query.filter_by(
-        email=user.email, 
+        phone=user.phone, 
         date=date,
     ).all()
     
@@ -133,18 +133,18 @@ def buy_point(email):
             print("TEST", "State = ", resp, "Test")
         
         if resp == "1":
-            return redirect(url_for("main.request_pay_point", email=user.email, product=product, price=price, date=date, time=time))
+            return redirect(url_for("main.request_pay_point", phone=user.phone, product=product, price=price, date=date, time=time))
         else:
             redirect("#")
         
     return  render_template("user/buy_point.html", user=user, form=form, point_tables=point_tables)
 
 
-@bp.route('/user_menu/<email>/<product>/<price>/<date>/<time>/request_pay/point', methods=('GET', 'POST'))
-def request_pay_point(email, product, price, date, time):
+@bp.route('/user_menu/<phone>/<product>/<price>/<date>/<time>/request_pay/point', methods=('GET', 'POST'))
+def request_pay_point(phone, product, price, date, time):
     
     if request.method == 'POST':
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(phone=phone).first()
         
         paycheck = PayDB.query.filter_by(
             recvphone=user.phone,
@@ -154,27 +154,27 @@ def request_pay_point(email, product, price, date, time):
         
         if len(paycheck) == 1:        
             if paycheck[0].pay_state == "4":
-                return redirect(url_for("main.confirm_pay", email=user.email))
+                return redirect(url_for("main.confirm_pay", phone=user.phone))
         else:
             flash("결제가 완료되지 않았습니다.")
             return redirect("#")
     
     return render_template("user/request_pay_point.html")
 
-@bp.route("/user_menu/<email>/confirm_pay", methods=('GET', 'POST'))
-def confirm_pay(email):
+@bp.route("/user_menu/<phone>/confirm_pay", methods=('GET', 'POST'))
+def confirm_pay(phone):
     
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     return render_template("user/confirm_pay.html", user=user)
 
 
 ### Reserve Court ###
 
-@bp.route("/user_menu/<email>/reserve_court/select_area_date", methods=('GET', 'POST'))
-def reserve_court_area_date(email):
+@bp.route("/user_menu/<phone>/reserve_court/select_area_date", methods=('GET', 'POST'))
+def reserve_court_area_date(phone):
     form = ReserveCourtAreaDateForm()
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     today_tmp = datetime.date.today()
     cur_date = today_tmp.strftime("%Y-%m-%d")
     max_date = (today_tmp + datetime.timedelta(days=7)).strftime("%Y-%m-%d")
@@ -182,17 +182,17 @@ def reserve_court_area_date(email):
     if request.method == 'POST' and form.validate_on_submit():
         area = form.area.data
         date = form.date.data
-        return redirect(url_for("main.reserve_court_court", email=user.email, area=area, date=date))
+        return redirect(url_for("main.reserve_court_court", phone=user.phone, area=area, date=date))
     
     return render_template("user/reserve_court_area_date.html", form=form, cur_date=cur_date, max_date=max_date)
 
-@bp.route("/user_menu/<email>/<area>/<date>/reserve_court/select_court", methods=('GET', 'POST'))
-def reserve_court_court(email, area, date):
+@bp.route("/user_menu/<phone>/<area>/<date>/reserve_court/select_court", methods=('GET', 'POST'))
+def reserve_court_court(phone, area, date):
     form = ReserveCourtCourtForm()
     
     ## Get information about court reservations
     court = ReserveCourt.query.filter_by(area=area, date=date)
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     court_status_table = ReservationStatus.query.filter_by(area=area, status="1").order_by(ReservationStatus.id).all()
     
@@ -200,31 +200,31 @@ def reserve_court_court(email, area, date):
         court_area = area
         court_date = date
         court_name = form.court.data
-        return redirect(url_for("main.reserve_court_time", email=user.email, court_area=court_area, court_date=court_date, court_name=court_name))
+        return redirect(url_for("main.reserve_court_time", phone=user.phone, court_area=court_area, court_date=court_date, court_name=court_name))
     
     return render_template("user/reserve_court_court.html", form=form, court_status_table=court_status_table, court=court)
 
-@bp.route("/user_menu/<email>/<court_area>/<court_date>/<court_name>/select_time", methods=('GET', 'POST'))
-def reserve_court_time(email, court_area, court_date, court_name):
+@bp.route("/user_menu/<phone>/<court_area>/<court_date>/<court_name>/select_time", methods=('GET', 'POST'))
+def reserve_court_time(phone, court_area, court_date, court_name):
     form = ReserveCourtTimeForm()
     
     ## Get information about court reservations
     court_info = ReserveCourt.query.filter_by(area=court_area, date=court_date, court=court_name, buy=1).all()
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     court_info = [int(x.time) for x in court_info]
     
     if request.method == 'POST' and form.validate_on_submit():
         reserve_times = request.form.getlist("time")
-        return redirect(url_for("main.reserve_court", email=user.email, court_area=court_area, court_date=court_date, court_name=court_name, reserve_times=reserve_times))
+        return redirect(url_for("main.reserve_court", phone=user.phone, court_area=court_area, court_date=court_date, court_name=court_name, reserve_times=reserve_times))
     
     return render_template("user/reserve_court_time.html", form=form, court_info=court_info, timetable=timetable)
 
-@bp.route("/user_menu/<email>/<court_area>/<court_date>/<court_name>/<reserve_times>/reserve_court", methods=('GET', 'POST'))
-def reserve_court(email, court_area, court_date, court_name, reserve_times):
+@bp.route("/user_menu/<phone>/<court_area>/<court_date>/<court_name>/<reserve_times>/reserve_court", methods=('GET', 'POST'))
+def reserve_court(phone, court_area, court_date, court_name, reserve_times):
     form = ReserveCourtForm()
     
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     reserve_times = ast.literal_eval(reserve_times)
     
@@ -303,20 +303,20 @@ def reserve_court(email, court_area, court_date, court_name, reserve_times):
                 resp = resp.decode('utf-8')[6]
                 print("TEST", "State = ", resp, "Test")
             
-            return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
         
         else:
-            return redirect(url_for("main.request_pay_court", email=user.email, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
     
     return render_template("user/reserve_court.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
 
 
-@bp.route('/user_menu/<email>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/request_pay/court', methods=('GET', 'POST'))
-def request_pay_court(email, date, area, time, court, total_pay, total_price):
+@bp.route('/user_menu/<phone>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/request_pay/court', methods=('GET', 'POST'))
+def request_pay_court(phone, date, area, time, court, total_pay, total_price):
     tmp_time = ast.literal_eval(time)
     if type(tmp_time) == int:
         tmp_time = [tmp_time]
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
         .filter(ReserveCourt.time.in_(tmp_time))\
         .all()
@@ -335,7 +335,7 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
             ).order_by(PayDB.mul_no.desc()).first()
             
             if paycheck != None:
-                return redirect(url_for("main.confirm_pay", email=user.email))
+                return redirect(url_for("main.confirm_pay", phone=user.phone))
             else:
                 flash("결제가 완료되지 않았습니다.")
                 return redirect("#")
@@ -372,20 +372,20 @@ def request_pay_court(email, date, area, time, court, total_pay, total_price):
                 
             db.session.commit()
                 
-            return redirect(url_for("main.confirm_pay", email=user.email))
+            return redirect(url_for("main.confirm_pay", phone=user.phone))
             
     
     return render_template("user/request_pay_court.html", total_pay=total_pay)
 
 
-@bp.route("/user_menu/check_reservation/<email>", methods=["GET", "POST"])
-def check_reservation(email):
+@bp.route("/user_menu/check_reservation/<phone>", methods=["GET", "POST"])
+def check_reservation(phone):
     form = DoorOpenForm()
     date = datetime.date.today()
     
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
-    reservation_table = ReserveCourt.query.filter_by(email=email, buy=1)\
+    reservation_table = ReserveCourt.query.filter_by(phone=phone, buy=1)\
         .filter(ReserveCourt.date >= date)\
         .order_by(ReserveCourt.date)\
         .order_by(ReserveCourt.time)\
@@ -550,10 +550,10 @@ def get_door_status():
     
     return doorstatus.status
 
-@bp.route("/refund_reservation/<email>/<mul_no>", methods=["GET", "POST"])
-def refund_reservation(email, mul_no):
+@bp.route("/refund_reservation/<phone>/<mul_no>", methods=["GET", "POST"])
+def refund_reservation(phone, mul_no):
     
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
     reservation_info = ReserveCourt.query.filter_by(mul_no=mul_no).order_by(ReserveCourt.time).all()
     
@@ -610,16 +610,16 @@ def refund_reservation(email, mul_no):
                     db.session.commit()
                     
             flash("예약이 취소되었습니다. 포인트 반환 및 환불 처리가 완료되었습니다.")
-            return redirect(url_for('main.check_reservation', email=user.email))
+            return redirect(url_for('main.check_reservation', phone=user.phone))
         else:
             flash("이용 예정 시각과 현재 시각과의 차이가 48시간 이내이므로 예약 취소가 불가능합니다.")
-            return redirect(url_for('main.check_reservation', email=user.email))
+            return redirect(url_for('main.check_reservation', phone=user.phone))
     
     return render_template("user/refund_reservation.html", user=user)
 
-@bp.route("/change_password/<email>", methods=["GET", "POST"])
-def change_password(email):
-    user = User.query.filter_by(email=email).first()
+@bp.route("/change_password/<phone>", methods=["GET", "POST"])
+def change_password(phone):
+    user = User.query.filter_by(phone=phone).first()
     form = ChangePasswordForm()
     
     if request.method == "POST" and form.validate_on_submit():

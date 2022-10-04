@@ -14,14 +14,14 @@
 
     <div class="d-grid gap-auto mb-3">
         {% for court in court_table %}
-            <a href="{{ url_for('admin.court_status_management', admin_email=user.email, court_area=court.area) }}" class="d-grid btn btn-primary my-2 btn-lg">
+            <a href="{{ url_for('admin.court_status_management', admin_phone=user.phone, court_area=court.area) }}" class="d-grid btn btn-primary my-2 btn-lg">
                 {{ court.area }}
             </a>
         {% endfor %}
     </div> 
 
     <div class="d-grid gap-2 my-3">
-        <a href="{{ url_for('admin.product_management', admin_email=user.email) }}" class="btn btn-success">확인</a>
+        <a href="{{ url_for('admin.product_management', admin_phone=user.phone) }}" class="btn btn-success">확인</a>
     </div>
 
 </div>

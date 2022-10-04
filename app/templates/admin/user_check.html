@@ -59,7 +59,7 @@
                         Point: {{ user.point }}
                     </h6>
                     <div class="d-grid gap-2 my-2">
-                        <a href="{{ url_for('admin.change_user_info', admin_email=admin.email, user_phone=user.phone) }}" class="btn btn-success">회원 정보 및 포인트 관리</a>
+                        <a href="{{ url_for('admin.change_user_info', admin_phone=admin.phone, user_phone=user.phone) }}" class="btn btn-success">회원 정보 및 포인트 관리</a>
                     </div>
                 </div>
             </div>
@@ -68,7 +68,7 @@
         </div>
     </div>
     <div class="d-grid gap-2 my-3">
-        <a href="{{ url_for('admin.admin_menu', email=admin.email) }}" class="btn btn-primary">확인</a>
+        <a href="{{ url_for('admin.admin_menu', phone=admin.phone) }}" class="btn btn-primary">확인</a>
     </div>
 
 

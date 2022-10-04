@@ -74,7 +74,7 @@
                             {{ reservation.date }}
                         </h6>
                         <div class="d-grid gap-2 my-2">
-                            <a href="{{ url_for('admin.refund_reservation', email=user.email, mul_no=reservation.mul_no) }}" class="btn btn-danger btn-lg">예약 취소</a>
+                            <a href="{{ url_for('admin.refund_reservation', phone=user.phone, mul_no=reservation.mul_no) }}" class="btn btn-danger btn-lg">예약 취소</a>
                         </div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
         </div>
     </div>
     <div class="d-grid gap-2 my-3">
-        <a href="{{ url_for('admin.admin_menu', email=user.email) }}" class="btn btn-primary">확인</a>
+        <a href="{{ url_for('admin.admin_menu', phone=user.phone) }}" class="btn btn-primary">확인</a>
     </div>
 
 

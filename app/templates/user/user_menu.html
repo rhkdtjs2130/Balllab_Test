@@ -15,19 +15,19 @@
     <br>
 
     <div class="d-grid gap-auto mb-3">
-        <a href="{{ url_for('main.buy_point', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+        <a href="{{ url_for('main.buy_point', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             포인트 충전
         </a>
 
-        <a href="{{ url_for('main.reserve_court_area_date', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+        <a href="{{ url_for('main.reserve_court_area_date', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             코트 예약
         </a>
 
-        <a href="{{ url_for('main.check_reservation', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+        <a href="{{ url_for('main.check_reservation', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             예약 확인
         </a>
 
-        <a href="{{ url_for('main.change_password', email=user.email) }}" class="btn btn-primary my-1 btn-lg">
+        <a href="{{ url_for('main.change_password', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             비밀번호 변경
         </a>
     </div> 

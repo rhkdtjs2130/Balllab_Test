@@ -67,15 +67,15 @@ timetable = [
 bp = Blueprint("admin", __name__, url_prefix='/')
 
 
-@bp.route('/admin_menu/<email>')
-def admin_menu(email):
-    user = User.query.filter_by(email=email).first()
+@bp.route('/admin_menu/<phone>')
+def admin_menu(phone):
+    user = User.query.filter_by(phone=phone).first()
     return  render_template("admin/admin_menu.html", user=user)
 
-@bp.route('/admin_menu/<email>/door_list', methods=["GET", "POST"])
-def door_list(email):
+@bp.route('/admin_menu/<phone>/door_list', methods=["GET", "POST"])
+def door_list(phone):
     form = DoorOpenForm()
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     if request.method == "POST":
         data_dict = {
@@ -87,11 +87,11 @@ def door_list(email):
     
     return  render_template("admin/door_list.html", user=user, form=form)
 
-@bp.route('/admin_reservation/<email>', methods=["GET", "POST"])
-def admin_reservation(email):
+@bp.route('/admin_reservation/<phone>', methods=["GET", "POST"])
+def admin_reservation(phone):
     date = datetime.date.today()
     
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(phone=phone).first()
     
     reservation_table = ReserveCourt.query.filter_by(buy=1)\
         .filter(ReserveCourt.date >= date)\
@@ -133,10 +133,10 @@ def admin_reservation(email):
     
     return  render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form, cur_date=date)
 
-@bp.route("/admin/refund_reservation/<email>/<mul_no>", methods=["GET", "POST"])
-def refund_reservation(email, mul_no):
+@bp.route("/admin/refund_reservation/<phone>/<mul_no>", methods=["GET", "POST"])
+def refund_reservation(phone, mul_no):
     pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
-    admin = User.query.filter_by(email=email).first()
+    admin = User.query.filter_by(phone=phone).first()
     reservation_info = ReserveCourt.query.filter_by(mul_no=mul_no).order_by(ReserveCourt.time).all()
     
     if request.method == "POST":
@@ -180,14 +180,14 @@ def refund_reservation(email, mul_no):
                 db.session.commit()
                 
         flash("예약이 취소되었습니다. 포인트 반환 및 환불 처리가 완료되었습니다.")
-        return redirect(url_for('admin.admin_reservation', email=admin.email))
+        return redirect(url_for('admin.admin_reservation', phone=admin.phone))
     
     return render_template("admin/refund_reservation.html", admin=admin)
 
-@bp.route('/admin/user_check/<email>', methods=['GET', 'POST'])
-def user_check(email):
+@bp.route('/admin/user_check/<phone>', methods=['GET', 'POST'])
+def user_check(phone):
     user_table = User.query.all()
-    admin = User.query.filter_by(email=email).first()
+    admin = User.query.filter_by(phone=phone).first()
     form = UserFilterForm()
     
     if request.method == 'POST' and form.validate_on_submit():
@@ -195,8 +195,8 @@ def user_check(email):
     
     return render_template("admin/user_check.html", admin=admin, user_table=user_table, form=form)
 
-@bp.route('/admin/user_check/change_user_info/<admin_email>/<user_phone>', methods=['GET', 'POST'])
-def change_user_info(admin_email, user_phone):
+@bp.route('/admin/user_check/change_user_info/<admin_phone>/<user_phone>', methods=['GET', 'POST'])
+def change_user_info(admin_phone, user_phone):
     user = User.query.filter_by(phone=user_phone).first()
     form = ChangeUserInfoForm()
     
@@ -209,7 +209,7 @@ def change_user_info(admin_email, user_phone):
         user.point = form.point.data
         db.session.commit()
         
-        admin = User.query.filter_by(email=admin_email).first()
+        admin = User.query.filter_by(phone=admin_phone).first()
         
         grant_point = GrantPoint(
             date=datetime.datetime.today(),
@@ -225,36 +225,36 @@ def change_user_info(admin_email, user_phone):
         flash("반영 되었습니다.")
         user = User.query.filter_by(phone=user_phone).first()
         
-    return render_template("admin/change_user_info.html", user=user, admin_email=admin_email, form=form)
+    return render_template("admin/change_user_info.html", user=user, admin_phone=admin_phone, form=form)
 
-@bp.route('/admin/reserve_court/<admin_email>/', methods=['GET', 'POST'])
-def reserve_court(admin_email):
+@bp.route('/admin/reserve_court/<admin_phone>/', methods=['GET', 'POST'])
+def reserve_court(admin_phone):
     
     form = ReserveCourtAreaDateForm()
     cur_date = datetime.date.today()
     
     if request.method == 'POST' and form.validate_on_submit():
-        return redirect(url_for('admin.reserve_court_time', admin_email=admin_email, court_area=form.area.data, court_date=form.date.data))
+        return redirect(url_for('admin.reserve_court_time', admin_phone=admin_phone, court_area=form.area.data, court_date=form.date.data))
         
     return render_template("admin/reserve_court_area_date.html", form=form, cur_date=cur_date)
 
-@bp.route('/admin/reserve_court/time/<court_area>/<court_date>/<admin_email>', methods=['GET', 'POST'])
-def reserve_court_time(admin_email, court_area, court_date):
+@bp.route('/admin/reserve_court/time/<court_area>/<court_date>/<admin_phone>', methods=['GET', 'POST'])
+def reserve_court_time(admin_phone, court_area, court_date):
     form = ReserveCourtTimeForm()
     court_info = ReserveCourt.query.filter_by(area=court_area, date=court_date, buy=1).all()
     court_info = [int(x.time) for x in court_info]
     
     if request.method == "POST" and form.validate_on_submit():
         reserve_times = request.form.getlist("time")
-        return redirect(url_for("admin.reserve_court_check", admin_email=admin_email, court_area=court_area, court_date=court_date, reserve_times=reserve_times))
+        return redirect(url_for("admin.reserve_court_check", admin_phone=admin_phone, court_area=court_area, court_date=court_date, reserve_times=reserve_times))
     
     return render_template("admin/reserve_court_time.html", form=form, timetable=timetable, court_info=court_info)
 
-@bp.route("/admin/reserve_court/reserve_court_check/<admin_email>/<court_area>/<court_date>/<reserve_times>/", methods=('GET', 'POST'))
-def reserve_court_check(admin_email, court_area, court_date, reserve_times):
+@bp.route("/admin/reserve_court/reserve_court_check/<admin_phone>/<court_area>/<court_date>/<reserve_times>/", methods=('GET', 'POST'))
+def reserve_court_check(admin_phone, court_area, court_date, reserve_times):
     form = ReserveCourtForm()
     
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     
     reserve_times = ast.literal_eval(reserve_times)
     
@@ -340,25 +340,25 @@ def reserve_court_check(admin_email, court_area, court_date, reserve_times):
         
         flash("예약 되었습니다.")
         
-        return redirect(url_for("admin.admin_menu", email=admin_email))
+        return redirect(url_for("admin.admin_menu", phone=admin_phone))
     
     return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_nm_list, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
 
-@bp.route('/admin/product_management/<admin_email>/', methods=['GET', 'POST'])
-def product_management(admin_email):
-    user = User.query.filter_by(email=admin_email).first()
+@bp.route('/admin/product_management/<admin_phone>/', methods=['GET', 'POST'])
+def product_management(admin_phone):
+    user = User.query.filter_by(phone=admin_phone).first()
     return render_template("admin/product_management.html", user=user)
 
-@bp.route('/admin/point_price_management/<admin_email>/', methods=['GET', 'POST'])
-def point_price_management(admin_email):
-    user = User.query.filter_by(email=admin_email).first()
+@bp.route('/admin/point_price_management/<admin_phone>/', methods=['GET', 'POST'])
+def point_price_management(admin_phone):
+    user = User.query.filter_by(phone=admin_phone).first()
     point_table = PointTable.query.order_by(PointTable.price).all()
     return render_template("admin/point_price_management.html", user=user, point_table=point_table)
 
-@bp.route('/admin/point_price_change_management/<admin_email>/<price>', methods=['GET', 'POST'])
-def point_price_change_management(admin_email, price):
+@bp.route('/admin/point_price_change_management/<admin_phone>/<price>', methods=['GET', 'POST'])
+def point_price_change_management(admin_phone, price):
     form = PointManagementForm()
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     point_table = PointTable.query.filter_by(price=price).first()
     
     if request.method == 'POST' and form.validate_on_submit():
@@ -368,16 +368,16 @@ def point_price_change_management(admin_email, price):
     
     return render_template("admin/point_price_change_management.html", user=user, point_table=point_table, form=form)
 
-@bp.route('/admin/court_price_management/<admin_email>/', methods=['GET', 'POST'])
-def court_price_management(admin_email):
-    user = User.query.filter_by(email=admin_email).first()
+@bp.route('/admin/court_price_management/<admin_phone>/', methods=['GET', 'POST'])
+def court_price_management(admin_phone):
+    user = User.query.filter_by(phone=admin_phone).first()
     court_table = CourtPriceTable.query.order_by(CourtPriceTable.id).all()
     return render_template("admin/court_price_management.html", user=user, court_table=court_table)
 
-@bp.route('/admin/court_price_management/<court_area>/<admin_email>/', methods=['GET', 'POST'])
-def court_price_change_management(admin_email, court_area):
+@bp.route('/admin/court_price_management/<court_area>/<admin_phone>/', methods=['GET', 'POST'])
+def court_price_change_management(admin_phone, court_area):
     form = CourtManagementForm()
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     court_table = CourtPriceTable.query.filter_by(area=court_area).first()
     
     if request.method == 'POST' and form.validate_on_submit():
@@ -387,28 +387,28 @@ def court_price_change_management(admin_email, court_area):
         
     return render_template("admin/court_price_change_management.html", user=user, court_table=court_table, form=form)
 
-@bp.route('/admin/court_management/<admin_email>/', methods=['GET', 'POST'])
-def court_management(admin_email):
+@bp.route('/admin/court_management/<admin_phone>/', methods=['GET', 'POST'])
+def court_management(admin_phone):
     
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     court_table = CourtList.query.order_by(CourtList.id).all()
     
     return render_template("admin/court_management.html", user=user, court_table=court_table)
 
-@bp.route('/admin/court_status_management/<court_area>/<admin_email>/', methods=['GET', 'POST'])
-def court_status_management(admin_email, court_area):
+@bp.route('/admin/court_status_management/<court_area>/<admin_phone>/', methods=['GET', 'POST'])
+def court_status_management(admin_phone, court_area):
     
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     court_table = ReservationStatus.query.filter_by(area=court_area).order_by(ReservationStatus.id).all()
     
     return render_template("admin/court_status_management.html", user=user, court_table=court_table)
 
-@bp.route('/admin/court_onoff/<court_area>/<court_nm>/<admin_email>/', methods=['GET', 'POST'])
-def court_status_onoff(admin_email, court_area, court_nm):
+@bp.route('/admin/court_onoff/<court_area>/<court_nm>/<admin_phone>/', methods=['GET', 'POST'])
+def court_status_onoff(admin_phone, court_area, court_nm):
     
     form = CourtOnOffForm()
     
-    user = User.query.filter_by(email=admin_email).first()
+    user = User.query.filter_by(phone=admin_phone).first()
     court_table = ReservationStatus.query.filter_by(area=court_area, court_nm=court_nm).first()
     
     if request.method == "POST" and form.validate_on_submit():

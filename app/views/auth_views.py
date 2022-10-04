@@ -29,7 +29,7 @@ def login_form():
             if _next:
                 return redirect(_next)
             else:
-                return redirect(url_for('main.user_menu', email=user.email))
+                return redirect(url_for('main.user_menu', phone=user.phone))
         flash(error)
     return render_template("auth/login.html", form=form)
 
@@ -68,14 +68,14 @@ def signup(agree_3):
             )
             db.session.add(user)
             db.session.commit()
-            return redirect(url_for('auth.signup_check', email=user.email))
+            return redirect(url_for('auth.signup_check', phone=user.phone))
         else:
             flash('이미 존재하는 사용자입니다.')
     return render_template('auth/signup.html', form=form)
 
-@bp.route('/signup/check/<email>', methods=('GET', 'POST'))
-def signup_check(email):
-    user = User.query.filter_by(email=email).first()
+@bp.route('/signup/check/<phone>', methods=('GET', 'POST'))
+def signup_check(phone):
+    user = User.query.filter_by(phone=phone).first()
     return render_template('auth/signup_check.html', user=user)
 
 @bp.route('/admin_login/', methods=['GET', 'POST'])
@@ -99,7 +99,7 @@ def admin_login_form():
             if _next:
                 return redirect(_next)
             else:
-                return redirect(url_for('admin.admin_menu', email=user.email))
+                return redirect(url_for('admin.admin_menu', phone=user.phone))
         flash(error)
     return render_template("auth/login_admin.html", form=form)
 

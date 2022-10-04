@@ -56,7 +56,7 @@
                     </form>
                     <br>
                     <div class="d-grid gap-2 my-2">
-                        <a href="{{ url_for('main.refund_reservation', email=user.email, mul_no=reservation.mul_no) }}" class="btn btn-danger btn-sm">예약 취소</a>
+                        <a href="{{ url_for('main.refund_reservation', phone=user.phone, mul_no=reservation.mul_no) }}" class="btn btn-danger btn-sm">예약 취소</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -67,7 +67,7 @@
         </div>
     </div>
     <div class="d-grid gap-2 my-3">
-        <a href="{{ url_for('main.user_menu', email=user.email) }}" class="btn btn-primary">확인</a>
+        <a href="{{ url_for('main.user_menu', phone=user.phone) }}" class="btn btn-primary">확인</a>
     </div>
 
 

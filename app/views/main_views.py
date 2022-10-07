@@ -259,6 +259,7 @@ def reserve_court(phone, court_area, court_date, court_name, reserve_times):
                 area=court_area, 
                 court=court_name,
                 time=str(tmp_time),
+                buy=1,
             ).first()
             
             if reserve_check == None:

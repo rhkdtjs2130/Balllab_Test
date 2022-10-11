@@ -45,6 +45,11 @@
                         <h6  style="color: grey">
                             {{ reservation.date }}
                         </h6>
+                        {% if reservation.area == '성수자양점' %}
+                            <h6  style="color: royalblue">
+                                화장실 비밀번호: 9447
+                            </h6>
+                        {% endif %}
                     </div>
                     <form method="post" name="DoorOpenForm">
                         <input type="hidden", name="area", value="{{ reservation.court }}">

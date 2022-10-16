@@ -103,30 +103,78 @@ def admin_reservation(phone):
     
     if request.method == 'POST':
         
-        if (form.date.data != None) and (form.username.data != ''):
+        if (form.date.data != None) and (form.username.data != '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                     buy=1, 
                     username=form.username.data, 
+                    phone=form.phone.data,
                 ).filter(ReserveCourt.date == form.date.data)\
                 .order_by(ReserveCourt.date)\
                 .order_by(ReserveCourt.time)\
                 .all()
             date = form.date.data
             
-        elif (form.date.data == None) and (form.username.data != ''):
+        elif (form.date.data != None) and (form.username.data != "") and (form.phone.data == ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1,
+                    username=form.username.data,
+                ).filter(ReserveCourt.date == form.date.data)\
+                .order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data != None) and (form.username.data == '') and (form.phone.data != ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                    phone=form.phone.data,
+                ).filter(ReserveCourt.date == form.date.data)\
+                .order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data != None) and (form.username.data == '') and (form.phone.data == ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                ).filter(ReserveCourt.date == form.date.data)\
+                .order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data == None) and (form.username.data != '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                     buy=1, 
                     username=form.username.data, 
+                    phone=form.phone.data,
                 ).order_by(ReserveCourt.date)\
                 .order_by(ReserveCourt.time)\
                 .all()
             date = form.date.data
             
-        elif (form.date.data != None) and (form.username.data == ""):
+        elif (form.date.data == None) and (form.username.data != "") and (form.phone.data == ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1,
+                    username=form.username.data,
+                ).order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data == None) and (form.username.data == '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                     buy=1, 
-                ).filter(ReserveCourt.date == form.date.data)\
-                .order_by(ReserveCourt.date)\
+                    phone=form.phone.data,
+                ).order_by(ReserveCourt.date)\
+                .order_by(ReserveCourt.time)\
+                .all()
+            date = form.date.data
+            
+        elif (form.date.data == None) and (form.username.data == '') and (form.phone.data == ''):
+            reservation_table = ReserveCourt.query.filter_by(
+                    buy=1, 
+                ).order_by(ReserveCourt.date)\
                 .order_by(ReserveCourt.time)\
                 .all()
             date = form.date.data
@@ -191,7 +239,12 @@ def user_check(phone):
     form = UserFilterForm()
     
     if request.method == 'POST' and form.validate_on_submit():
-        user_table = User.query.filter_by(username=form.username.data).all()
+        
+        if form.username.data != "":
+            user_table = User.query.filter_by(username=form.username.data).all()
+            
+        elif form.phone.data != "":
+            user_table = User.query.filter_by(phone=form.phone.data).all()
     
     return render_template("admin/user_check.html", admin=admin, user_table=user_table, form=form)
 
@@ -312,7 +365,10 @@ def reserve_court_check(admin_phone, court_area, court_date, reserve_times):
                     db.session.add(court_reserve)
                     db.session.commit()
                 else:
-                    continue
+                    ## Reserve Court ##
+                    reserve_check.buy = 1
+                    reserve_check.mul_no = f"point_{len(pay_db)}"
+                    db.session.commit()
             
         pay_add = PayDB(
             mul_no = f"point_{len(pay_db)}",

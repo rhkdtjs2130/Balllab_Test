@@ -71,10 +71,12 @@ class FindPassword(FlaskForm):
     
 class FilterReservationForm(FlaskForm):
     username = StringField('실명')
+    phone = StringField('핸드폰 번호')
     date = DateField("날짜")
 
 class UserFilterForm(FlaskForm):
-    username = StringField('실명', validators=[DataRequired("회원명을 입력해주세요."), Length(min=1, max=25)])
+    username = StringField('실명')
+    phone = StringField('핸드폰번호')
     
 class ChangeUserInfoForm(FlaskForm):
     username = StringField('실명', validators=[DataRequired("실명을 입력해주세요."), Length(min=1, max=25)])

@@ -38,6 +38,9 @@
                 <label for="username"><b>회원명</b></label>
                 <input type="text" class="form-control" name="username" id="username"
                     value="{{ form.username.data or '' }}">
+                <label for="phone"><b>번호</b></label>
+                    <input type="text" class="form-control" name="phone" id="phone"
+                        value="{{ form.phone.data or '' }}">
             </div>
             <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-outline-success">

@@ -213,6 +213,21 @@ def reserve_court_time(phone, court_area, court_date, court_name):
     user = User.query.filter_by(phone=phone).first()
     
     court_info = [int(x.time) for x in court_info]
+
+    is_today = datetime.datetime.today()
+    court_day = datetime.datetime.strptime(court_date, '%Y-%m-%d').date()
+    
+    if court_day == is_today.date():
+        if is_today.hour >= 10:
+            hour = f"{is_today.hour}:00"
+        else:
+            hour = f"0{is_today.hour}:00"
+            
+        block_begin = max([n for n, x in enumerate(timetable) if hour in x]) + 1
+        block_table = [n for n in range(block_begin)]
+        
+        court_info = court_info + block_table
+        
     
     if request.method == 'POST' and form.validate_on_submit():
         reserve_times = request.form.getlist("time")

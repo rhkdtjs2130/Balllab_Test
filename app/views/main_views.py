@@ -113,7 +113,7 @@ def buy_point(phone):
         post_data = (
             {
                 'cmd': 'payrequest',
-                'userid': 'balllab',
+                'userid': 'newballlab',
                 'goodname': f"{product} LUV", 
                 'price': price, 
                 'recvphone': user.phone,
@@ -297,10 +297,16 @@ def reserve_court(phone, court_area, court_date, court_name, reserve_times):
         tmp_list = [str(x) for x in tmp_list]
         
         if total_pay != 0:
+            
+            if court_area == "어린이대공원점":
+                user_id = "newballlab"
+            elif court_area == "성수자양점":
+                user_id = "balllabss"
+            
             post_data = (
                 {
                     'cmd': 'payrequest',
-                    'userid': 'balllab',
+                    'userid': user_id,
                     'goodname': court_name, 
                     'price': total_pay,
                     'recvphone': user.phone,
@@ -439,10 +445,16 @@ def check_reservation(phone):
 
 @bp.route("/pay_check", methods=["POST"])
 def pay_check():
-    key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
-    value_info = "3c0VLPJBsy0//kO2e3TEexga0slLAiui2bsP1P985Rc="
+    key_info = [
+        "lV7FSRjIxUq4b+2PiWlgge1DPJnCCRVaOgT+oqg6zaM=", ## 어린이대공원점
+        "K8PbtiU4wqJXpMBfBwWSPO1DPJnCCRVaOgT+oqg6zaM=", ## 성수자양점
+    ]
+    value_info = [
+        "lV7FSRjIxUq4b+2PiWlggUdrk/uKlhCLAkjn5E6oM7w=", ## 어린이대공원점
+        "K8PbtiU4wqJXpMBfBwWSPDtOlrsKL7Aq6S3j3uVtLKc=", ## 성수자양점
+    ]
     
-    if (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "4"):
+    if (request.form["linkkey"] in key_info) and (request.form["linkval"] in value_info) and (request.form['pay_state'] == "4"):
         
         db_update = PayDB(
             mul_no = request.form['mul_no'],
@@ -528,7 +540,8 @@ def pay_check():
         
         return "SUCCESS"
     
-    elif (request.form["linkkey"] == key_info) and (request.form["linkval"] == value_info) and (request.form['pay_state'] == "9" or request.form['pay_state'] == "64"):
+    ## Refund
+    elif (request.form["linkkey"] in key_info) and (request.form["linkval"] in value_info) and (request.form['pay_state'] == "9" or request.form['pay_state'] == "64"):
         
         pay_info = PayDB.query.filter_by(mul_no=request.form['mul_no']).first()
         pay_info.pay_state = request.form['pay_state']
@@ -600,11 +613,17 @@ def refund_reservation(phone, mul_no):
                     db.session.commit()
                     
             else:
-                key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
+                if pay_info.area == "어린이대공원점":
+                    user_id = "newballlab"
+                    key_info = "lV7FSRjIxUq4b+2PiWlgge1DPJnCCRVaOgT+oqg6zaM="
+                    
+                elif pay_info.area == "성수자양점":
+                    user_id = "balllabss"
+                    key_info = "K8PbtiU4wqJXpMBfBwWSPDtOlrsKL7Aq6S3j3uVtLKc="
                 
                 post_data = {
                     'cmd': 'paycancel',
-                    'userid': 'balllab',
+                    'userid': user_id,
                     'linkkey': key_info,
                     'mul_no':pay_info.mul_no,
                     'cancelmemo': "48시간 전 예약 취소",

@@ -619,7 +619,7 @@ def refund_reservation(phone, mul_no):
                     
                 elif pay_info.area == "성수자양점":
                     user_id = "balllabss"
-                    key_info = "K8PbtiU4wqJXpMBfBwWSPDtOlrsKL7Aq6S3j3uVtLKc="
+                    key_info = "K8PbtiU4wqJXpMBfBwWSPO1DPJnCCRVaOgT+oqg6zaM="
                 
                 post_data = {
                     'cmd': 'paycancel',

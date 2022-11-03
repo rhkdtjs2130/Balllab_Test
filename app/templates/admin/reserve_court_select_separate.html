@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <h5 class="my-1 border-bottom pb-2 pt-2 text-center">
+        이용하실 코트를 선택해주세요.
+    </h5>
+    <br>
+
+    <form method="post">
+        {{ form.csrf_token }}
+        {% include "form_errors.html" %}
+
+        <div class="d-grid gap-2">
+            {% for court_single in court_status_table %}
+                <input type="radio" class="btn-check my-1" name="court" id={{ court_single.id }} autocomplete="off" value={{ court_single.court_nm }}>
+                <label class="btn btn-outline-secondary" for={{ court_single.id }}>{{ court_single.court }}</label>
+            {% endfor %}
+        </div>
+
+        <br>
+        <br>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">
+                확 인
+            </button>
+        </div>
+    </form>
+
+</div>
+
+{% endblock %}

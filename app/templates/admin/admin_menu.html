@@ -25,6 +25,10 @@
             코트 예약 (전체)
         </a>
 
+        <a href="{{ url_for('admin.reserve_court_separate', admin_phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
+            코트 예약 (개별)
+        </a>
+
         <a href="{{ url_for('admin.admin_reservation', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             예약 관리
         </a>

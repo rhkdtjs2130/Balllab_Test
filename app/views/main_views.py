@@ -339,7 +339,7 @@ def request_pay_court(phone, date, area, time, court, total_pay, total_price):
     if type(tmp_time) == int:
         tmp_time = [tmp_time]
     user = User.query.filter_by(phone=phone).first()
-    reservation_table = ReserveCourt.query.filter_by(date=date, area=area, court=court)\
+    reservation_table = ReserveCourt.query.filter_by(date=date, phone=phone, area=area, court=court)\
         .filter(ReserveCourt.time.in_(tmp_time))\
         .all()
 

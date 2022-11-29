@@ -70,19 +70,39 @@ bp = Blueprint("admin", __name__, url_prefix='/')
 
 @bp.route('/admin_menu/<phone>')
 def admin_menu(phone: str):
+    """관리자 페이지 메뉴 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 관리자 메뉴 페이지 html 렌더링
+    """
     user = User.query.filter_by(phone=phone).first()
     return render_template("admin/admin_menu.html", user=user)
 
 
 @bp.route('/admin_menu/<phone>/door_list', methods=["GET", "POST"])
 def door_list(phone: str):
+    """도어락 원격 오픈 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 도어락 원격 제어 페이지 html 렌더링
+    """
+    ## 도어락 제어를 위한 Form 불러오기
     form = DoorOpenForm()
     user = User.query.filter_by(phone=phone).first()
-
+    
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == "POST":
+        ## 도어락 개방을 위한 정보 정의 dict type
         data_dict = {
             'area': request.form['area']
         }
+        ## 도어락 개방 페이지에 Post 요청
         requests.post("http://43.200.247.167/door_open", data=data_dict)
         flash("열렸습니다.")
         redirect("#")
@@ -92,94 +112,114 @@ def door_list(phone: str):
 
 @bp.route('/admin_reservation/<phone>', methods=["GET", "POST"])
 def admin_reservation(phone: str):
+    """관리자 예약 확인 페이지 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 예약 확인 페이지 html 렌더링
+    """
+    ## 현재 일자와 시간 불러오기
     date = datetime.date.today()
 
     user = User.query.filter_by(phone=phone).first()
 
+    ## 현재 이후의 예약 정보 불러오기
     reservation_table = ReserveCourt.query.filter_by(buy=1)\
         .filter(ReserveCourt.date >= date)\
         .order_by(ReserveCourt.date)\
         .order_by(ReserveCourt.time)\
         .all()
 
+    ## 예약 정보 필터링을 위한 Form 불러오기
     form = FilterReservationForm()
 
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST':
-
+        
+        ## 예약일, 회원명, 핸드폰 기준으로 필터
         if (form.date.data != None) and (form.username.data != '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 username=form.username.data,
                 phone=form.phone.data,
             ).filter(ReserveCourt.date == form.date.data)\
-                .order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.date)\
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
-
+            
+        ## 예약일, 회원명 기준으로 필터
         elif (form.date.data != None) and (form.username.data != "") and (form.phone.data == ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 username=form.username.data,
             ).filter(ReserveCourt.date == form.date.data)\
-                .order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.date)\
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 예약일, 핸드폰 기준으로 필터
         elif (form.date.data != None) and (form.username.data == '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 phone=form.phone.data,
             ).filter(ReserveCourt.date == form.date.data)\
-                .order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.date)\
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 예약일 기준으로 필터
         elif (form.date.data != None) and (form.username.data == '') and (form.phone.data == ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
             ).filter(ReserveCourt.date == form.date.data)\
-                .order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.date)\
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 회원명, 핸드폰 기준으로 필터
         elif (form.date.data == None) and (form.username.data != '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 username=form.username.data,
                 phone=form.phone.data,
             ).order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 회원명 기준으로 필터
         elif (form.date.data == None) and (form.username.data != "") and (form.phone.data == ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 username=form.username.data,
             ).order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 핸드폰 기준으로 필터
         elif (form.date.data == None) and (form.username.data == '') and (form.phone.data != ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
                 phone=form.phone.data,
             ).order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
+        ## 필터가 없는 경우
         elif (form.date.data == None) and (form.username.data == '') and (form.phone.data == ''):
             reservation_table = ReserveCourt.query.filter_by(
                 buy=1,
             ).order_by(ReserveCourt.date)\
-                .order_by(ReserveCourt.time)\
-                .all()
+            .order_by(ReserveCourt.time)\
+            .all()
             date = form.date.data
 
     return render_template("admin/check_reservation.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form, cur_date=date)
@@ -187,52 +227,93 @@ def admin_reservation(phone: str):
 
 @bp.route("/admin/refund_reservation/<phone>/<mul_no>", methods=["GET", "POST"])
 def refund_reservation(phone: str, mul_no: str):
-    pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
-    admin = User.query.filter_by(phone=phone).first()
-    reservation_info = ReserveCourt.query.filter_by(
-        mul_no=mul_no).order_by(ReserveCourt.time).all()
+    """예햑 취소 페이지 Backend Code
 
+    Args:
+        phone (str): 회원 핸드폰 번호
+        mul_no (str): 환불할 결제 ID
+
+    Returns:
+        처음: 예약 취소 페이지 html 렌더링
+        POST: 관리자 예약 확인 페이지로 이동
+    """
+    ## 환불 처리할 건을 PayDB에서 조회
+    pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
+    
+    ## 환불 처리 집행할 관리자 정보 불러오기
+    admin = User.query.filter_by(phone=phone).first()
+    
+    ## 코트 예약 정보 DB에서 결제id에 해당하는 예약 건 불러오기
+    reservation_info = ReserveCourt.query.filter_by(
+        mul_no=mul_no
+    ).order_by(ReserveCourt.time).all()
+    
+    ## POST 요청한 경우 아래 if 문이 실행
     if request.method == "POST":
         user = User.query.filter_by(phone=pay_info.recvphone).first()
 
+        ## 포인트로만 결제한 경우
         if pay_info.pay_type == "point_only":
+            ## 회원 포인트에 환불할 포인트 반영
             user.point = user.point + pay_info.used_point
+            ## PayDB에 환불 상태로 변경
             pay_info.pay_state = '64'
+            ## DB에 수정사항 반영 및 업로드
             db.session.commit()
-
+            
+            ## 예약 DB에서 구입 상태 취소
             for reservation in reservation_info:
                 reservation.buy = 0
+                ## DB에 수정사항 반영 및 업로드
                 db.session.commit()
-
+                
+        ## 현금이 포함된 결제인 경우
         else:
-            key_info = "3c0VLPJBsy0//kO2e3TEe+1DPJnCCRVaOgT+oqg6zaM="
+            ## 예약한 코트 지점에 따른 환불 요청 아이디 설정
+            if pay_info.area == "어린이대공원점":
+                user_id = "newballlab"
+                key_info = "lV7FSRjIxUq4b+2PiWlgge1DPJnCCRVaOgT+oqg6zaM="
 
+            elif pay_info.area == "성수자양점":
+                user_id = "balllabss"
+                key_info = "K8PbtiU4wqJXpMBfBwWSPO1DPJnCCRVaOgT+oqg6zaM="
+
+            ## 환불 처리할 정보 정의
             post_data = {
                 'cmd': 'paycancel',
-                'userid': 'balllab',
+                'userid': user_id,
                 'linkkey': key_info,
                 'mul_no': pay_info.mul_no,
                 'cancelmemo': "관리자 예약 취소",
             }
-
+            
+            ## 전송할 데이터를 utf-8로 인코딩
             data = urllib.parse.urlencode(post_data).encode('utf-8')
-            req = urllib.request.Request(
-                "http://api.payapp.kr/oapi/apiLoad.html")
-
+            
+            ## 전송할 데이터 API 페이지 정의
+            req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
+            
+            ## API에 인코딩한 데이터를 Post 전송
             with urllib.request.urlopen(req, data=data) as f:
                 resp = urllib.parse.unquote_to_bytes(f.read())
                 resp = resp.decode('utf-8')[6]
                 print("TEST", "State = ", resp, "Test")
 
+            ## 일반적으로는 1초 내로 환불 처리됌
             sleep(1)
 
+            ## 환불 처리중 사용한 포인트 만큼 회원 포이트 보유량에 반영
             user.point = user.point + pay_info.used_point
+            ## DB에 수정사항 반영 및 업로드
             db.session.commit()
-
+            
+            ## 예약 DB에서 구입 상태 취소
             for reservation in reservation_info:
                 reservation.buy = 0
+                ## DB에 수정사항 반영 및 업로드
                 db.session.commit()
-
+                
+        ## 예약 취소가 되었다고 메세지 출력
         flash("예약이 취소되었습니다. 포인트 반환 및 환불 처리가 완료되었습니다.")
         return redirect(url_for('admin.admin_reservation', phone=admin.phone))
 
@@ -241,18 +322,38 @@ def refund_reservation(phone: str, mul_no: str):
 
 @bp.route('/admin/user_check/<phone>', methods=['GET', 'POST'])
 def user_check(phone: str):
+    """유저 정보 조회 페이지 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 유저 정보 조회 페이지 html 렌더링
+    """
+    
+    ## 전체 회원 정보 불러오기
     user_table = User.query.all()
+    
+    ## 회원 정보 조회하는 관리자 정보 불러오기
     admin = User.query.filter_by(phone=phone).first()
+    
+    ## 유저 정보 필터를 위한 Form 불러오기
     form = UserFilterForm()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
 
+        ## 회원명으로 조회
         if form.username.data != "":
             user_table = User.query.filter_by(
-                username=form.username.data).all()
-
+                username=form.username.data
+            ).all()
+            
+        ## 핸드폰 번호로 조회
         elif form.phone.data != "":
-            user_table = User.query.filter_by(phone=form.phone.data).all()
+            user_table = User.query.filter_by(
+                phone=form.phone.data
+            ).all()
 
     return render_template("admin/user_check.html", admin=admin, user_table=user_table, form=form)
 

@@ -584,7 +584,7 @@ def request_pay_court(phone:str, date:str, area:str, time:str, court:str, total_
 
                 db.session.commit()
 
-            ## 회원 보유 포인트에서 사용한 포인트를 제외하기
+            ## 회원 보유 포인트에서 사용한 포인트를 제외하기 (포인트 결제)
             if user.point >= int(total_price):
                 user.point = user.point - int(total_price)
             ## 보유 포인트 보다 결제할 금액이 큰 경우 0으로 변환
@@ -666,17 +666,27 @@ def check_reservation(phone:str):
 
 @bp.route("/pay_check", methods=["POST"])
 def pay_check():
+    """PayAPP에서 보내주는 결제 정보를 처리하는 Backend Code
+
+    Returns:
+        None
+    """
+    # payapp에 들어가면 아래 정보들을 확인 가능함
+    ## 보내주는 정보를 확인할 key 값 설정
     key_info = [
         "lV7FSRjIxUq4b+2PiWlgge1DPJnCCRVaOgT+oqg6zaM=",  # 어린이대공원점
         "K8PbtiU4wqJXpMBfBwWSPO1DPJnCCRVaOgT+oqg6zaM=",  # 성수자양점
     ]
+    ## 보내주는 정보를 확인할 value 값 설정
     value_info = [
         "lV7FSRjIxUq4b+2PiWlggUdrk/uKlhCLAkjn5E6oM7w=",  # 어린이대공원점
         "K8PbtiU4wqJXpMBfBwWSPDtOlrsKL7Aq6S3j3uVtLKc=",  # 성수자양점
     ]
 
+    ## 결제 처리가 완료된 경우 아래 코드가 작동함 (Key값과 Value값도 동일한 경우 -> 보안처리)
     if (request.form["linkkey"] in key_info) and (request.form["linkval"] in value_info) and (request.form['pay_state'] == "4"):
-
+        
+        ## payapp에서 보내주는 정보를 기반으로 PayDB에 업데이트할 정보를 입력
         db_update = PayDB(
             mul_no=request.form['mul_no'],
             goodname=request.form['goodname'],
@@ -685,40 +695,43 @@ def pay_check():
             time=request.form['var2'],
             price=request.form['price'],
             recvphone=request.form['recvphone'],
-            pay_date=datetime.datetime.strptime(
-                request.form['pay_date'], '%Y-%m-%d %H:%M:%S'),
+            pay_date=datetime.datetime.strptime(request.form['pay_date'], '%Y-%m-%d %H:%M:%S'),
             pay_type=request.form['pay_type'],
             pay_state=request.form['pay_state'],
             used_point=int(request.form['memo'].split()[1]),
         )
-
+        ## DB 정보 업로드, 수정사항 반영 및 업로드
         db.session.add(db_update)
         db.session.commit()
 
         user = User.query.filter_by(phone=request.form['recvphone']).first()
 
-        ## Point
+        ## Point 구입인 경우
         if request.form['memo'] == f"주식회사볼랩_포인트 0":
-
+            
+            ## payapp에서 보내준 데이터를 처리해서 변수에 할당
             point_price = int(request.form['price'])
-            point_date = datetime.datetime.strptime(
-                request.form['var1'], '%Y-%m-%d')
+            point_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
             time = request.form['var2']
 
+            ## 구입한 상품을 가격을 기준으로 Point Table DB에서 갖고 오기
             product = PointTable.query.filter_by(
-                price=point_price).first().point
+                price=point_price
+            ).first().point
 
+            ## 복수 처리 방지를 위해 BuyPoint DB에서 포인트 할당이 이루어졌는지 조회
             is_record = BuyPoint.query.filter_by(
                 phone=user.phone,
                 time=time,
             ).first()
 
+            ## 할당된 경우가 없는 경우
             if is_record is None:
-                ## Assgin Point First
+                ## 회원에게 포인트 부여
                 user.point += int(product)
                 db.session.commit()
 
-                ## Add Logs
+                ## BuyPoint DB에 포인트 구입 이력 추가
                 record = BuyPoint(
                     phone=user.phone,
                     email=user.email,
@@ -730,19 +743,20 @@ def pay_check():
                     buy=1,
                     time=time,
                 )
-
+                ## DB 수정사항 반영 및 업로드
                 db.session.add(record)
                 db.session.commit()
 
-        ## Regrestration Court
+        ## 코트 예약의 경우
         else:
-            registration_date = datetime.datetime.strptime(
-                request.form['var1'], '%Y-%m-%d')
+            ## payapp에서 보내주는 정보를 바탕으로 DB에 업로드할 정보를 변수에 할당
+            registration_date = datetime.datetime.strptime(request.form['var1'], '%Y-%m-%d')
             registration_area = request.form['memo'].split()[0]
             registration_court = request.form['goodname']
             registration_time = ast.literal_eval(request.form['var2'])
             registration_total_price = request.form['memo'].split()[2]
 
+            ## 예약 확정을 위해 ReserveCourt DB에서 예약 신청 정보 불러오기
             reservation_table = ReserveCourt.query.filter_by(
                 phone=request.form['recvphone'],
                 date=registration_date,
@@ -750,12 +764,14 @@ def pay_check():
                 court=registration_court
             ).filter(ReserveCourt.time.in_(registration_time)).all()
 
+            ## 예약 신청 정보에 구입 확정을 코딩하고 payapp 결제 처리 아이디를 부여 'mul_no' (환불 처리용) 
             for reservation in reservation_table:
                 reservation.buy = 1
                 reservation.mul_no = request.form['mul_no']
-
+                ## DB에 변경 사항 및 수정사항 업로드
                 db.session.commit()
-
+            
+            ## 코트를 현금 결제한 경우 결제 확정시 사용한 포인트 차감
             if user.point >= int(registration_total_price):
                 user.point = user.point - int(registration_total_price)
             else:
@@ -765,11 +781,13 @@ def pay_check():
 
         return "SUCCESS"
 
-    ## Refund
+    ## 코트 예약 환불 처리 (pay_state가 9 또는 64 인 경우가 환불 요청)
     elif (request.form["linkkey"] in key_info) and (request.form["linkval"] in value_info) and (request.form['pay_state'] == "9" or request.form['pay_state'] == "64"):
-
+        ## 환불 처리할 건을 PayDB에서 결제 id 'mul_no' 기준으로 불러오기
         pay_info = PayDB.query.filter_by(mul_no=request.form['mul_no']).first()
+        ## PayDB에 해당 건을 환불 처리 상태로 변환
         pay_info.pay_state = request.form['pay_state']
+        ## DB에 수정사항 반영 및 업로드
         db.session.commit()
         return "SUCCESS"
 
@@ -779,10 +797,19 @@ def pay_check():
 ## Door Open
 @bp.route("/door_open", methods=["POST"])
 def door_open():
+    """도어락 오픈 Backend Code
+    POST 요청이 오면 도어락 오픈 처리
 
+    Returns:
+        "도어락 오픈"
+    """
+    ## POST 요청에서 전송된 데이터에서 오픈해야할 도어락 id를 변수에 할당
     area = request.form['area']
+    ## DoorStatus DB에 오픈할 도어락을 검색
     doorstatus = DoorStatus.query.filter_by(area=area).first()
+    ## 도어락을 오픈 상태로 변경
     doorstatus.status = "1"
+    ## DB에 수정사항 반영 및 업로드
     db.session.commit()
 
     return "Open Door"
@@ -790,10 +817,19 @@ def door_open():
 ## Door Close
 @bp.route("/door_close", methods=["POST"])
 def door_close():
+    """도어락 잠금 Backend Code
+    POST 요청이 오면 도어락 잠금 처리
 
+    Returns:
+        "도어락 잠금 메세지 출력"
+    """
+    ## POST 요청에서 전송된 데이터에서 오픈해야할 도어락 id를 변수에 할당
     area = request.form['area']
+    ## DoorStatus DB에 잠금할 도어락을 검색
     doorstatus = DoorStatus.query.filter_by(area=area).first()
+    ## 도어락을 잠금 상태로 변경
     doorstatus.status = "0"
+    ## DB에 수정사항 반영 및 업로드
     db.session.commit()
 
     return "Close Door"
@@ -801,8 +837,14 @@ def door_close():
 
 @bp.route("/get_door_status", methods=["POST"])
 def get_door_status():
+    """POST 요청이 오면 DoorStatus DB에서 도어락 상태를 반환 Backend Code
 
+    Returns:
+        도어락 상태 반환
+    """
+    ## POST 요청에서 전송된 데이터에서 상태를 확인해야하는 도어락 id를 변수에 할당
     area = request.form['area']
+    ## DoorStatus DB에서 도어락 상태 조회
     doorstatus = DoorStatus.query.filter_by(area=area).first()
 
     return doorstatus.status
@@ -810,38 +852,66 @@ def get_door_status():
 
 @bp.route("/refund_reservation/<phone>/<mul_no>", methods=["GET", "POST"])
 def refund_reservation(phone:str, mul_no:str):
+    """환불 처리 Backend Code
 
+    Args:
+        phone (str): 회원 핸드폰 번호
+        mul_no (str): 환불할 결제 ID
+
+    Returns:
+        처음: 환불 페이지 html 렌더링
+        POST: 예약 확인 페이지로 이동
+    """
+    ## 환불 처리할 유저 정보 불러오기
     user = User.query.filter_by(phone=phone).first()
+    ## 환불 처리할 건을 PayDB에서 조회
     pay_info = PayDB.query.filter_by(mul_no=mul_no).first()
+    ## 코트 예약 정보 DB에서 결제id에 해당하는 예약 건 불러오기
     reservation_info = ReserveCourt.query.filter_by(
-        mul_no=mul_no).order_by(ReserveCourt.time).all()
+        mul_no=mul_no,
+    ).order_by(ReserveCourt.time).all()
 
+    ## POST 요청한 경우 아래 if 문이 실행
     if request.method == "POST":
 
+        ## 환불 가능 시점 구하는 로직 - 시작
+        ### 여러 예약 건수 중 첫번쨰 시간 것을 갖고오기
         reservation_first = reservation_info[0]
-
+        ### 첫 시간 갖고오기 (12:30 ~ 13:00 -> 12:30) 
         time_tmp = timetable[int(reservation_first.time)]
         time_start = time_tmp.split()[0]
-
+        ### datetime.datetime으로 변환 정의
         time_str = f"{reservation_first.date} {time_start}"
-        date_time_start = datetime.datetime.strptime(
-            time_str, "%Y-%m-%d %H:%M")
+        ### datetime.datetime으로 type 변환
+        date_time_start = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+        
+        ### 48시간 전에 환불 가능하므로 시점을 기준으로 48시간 전 시점을 계산
         refund_due_date = date_time_start - datetime.timedelta(days=2)
 
         cur_date = datetime.datetime.now()
+        ## 환불 가능 시점 구하는 로직 - 끝
 
+        ## 환불 요청 시점이 환불 가능한 시점 보다 이전인 경우
         if cur_date < refund_due_date:
-
+            
+            ## 포인트로만 결제한 경우
             if pay_info.pay_type == "point_only":
+                ## 회원 포인트에 환불할 포인트 반영
                 user.point = user.point + pay_info.used_point
+                ## PayDB에 환불 상태로 변경
                 pay_info.pay_state = '64'
+                ## DB에 수정사항 반영 및 업로드
                 db.session.commit()
 
+                ## 예약 DB에서 구입 상태 취소
                 for reservation in reservation_info:
                     reservation.buy = 0
+                    ## DB에 수정사항 반영 및 업로드
                     db.session.commit()
-
+                    
+            ## 현금이 포함된 결제인 경우
             else:
+                ## 예약한 코트 지점에 따른 환불 요청 아이디 설정
                 if pay_info.area == "어린이대공원점":
                     user_id = "newballlab"
                     key_info = "lV7FSRjIxUq4b+2PiWlgge1DPJnCCRVaOgT+oqg6zaM="
@@ -850,6 +920,7 @@ def refund_reservation(phone:str, mul_no:str):
                     user_id = "balllabss"
                     key_info = "K8PbtiU4wqJXpMBfBwWSPO1DPJnCCRVaOgT+oqg6zaM="
 
+                ## 환불 처리할 정보 정의
                 post_data = {
                     'cmd': 'paycancel',
                     'userid': user_id,
@@ -858,26 +929,36 @@ def refund_reservation(phone:str, mul_no:str):
                     'cancelmemo': "48시간 전 예약 취소",
                 }
 
+                ## 전송할 데이터를 utf-8로 인코딩
                 data = urllib.parse.urlencode(post_data).encode('utf-8')
-                req = urllib.request.Request(
-                    "http://api.payapp.kr/oapi/apiLoad.html")
+                
+                ## 전송할 데이터 API 페이지 정의
+                req = urllib.request.Request("http://api.payapp.kr/oapi/apiLoad.html")
 
+                ## API에 인코딩한 데이터를 Post 전송
                 with urllib.request.urlopen(req, data=data) as f:
                     resp = urllib.parse.unquote_to_bytes(f.read())
                     resp = resp.decode('utf-8')[6]
                     print("TEST", "State = ", resp, "Test")
 
+                ## 일반적으로는 1초 내로 환불 처리됌
                 sleep(1)
 
+                ## 환불 처리중 사용한 포인트 만큼 회원 포이트 보유량에 반영
                 user.point = user.point + pay_info.used_point
+                ## DB에 수정사항 반영 및 업로드
                 db.session.commit()
 
+                ## 예약 DB에서 구입 상태 취소
                 for reservation in reservation_info:
                     reservation.buy = 0
+                    ## DB에 수정사항 반영 및 업로드
                     db.session.commit()
-
+            ## 예약 취소가 되었다고 메세지 출력
             flash("예약이 취소되었습니다. 포인트 반환 및 환불 처리가 완료되었습니다.")
             return redirect(url_for('main.check_reservation', phone=user.phone))
+        
+        ## 환불 요청 시점이 환불 가능한 시점을 지난 경우
         else:
             flash("이용 예정 시각과 현재 시각과의 차이가 48시간 이내이므로 예약 취소가 불가능합니다.")
             return redirect(url_for('main.check_reservation', phone=user.phone))
@@ -886,17 +967,36 @@ def refund_reservation(phone:str, mul_no:str):
 
 
 @bp.route("/change_password/<phone>", methods=["GET", "POST"])
-def change_password(phone):
+def change_password(phone:str):
+    """비밀번호 편경 페이지 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 비밀번호 변경 페이지 html 렌더링
+        Post 호출 시: 비밀번호 변경완료시 로그인 페이지로 이동
+    """
+    ## 회원 정보를 User DB에서 불러오기
     user = User.query.filter_by(phone=phone).first()
+    ## 비밀번호 변경 Form 불러오기
     form = ChangePasswordForm()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == "POST" and form.validate_on_submit():
+        
+        ## 새로 사용할 비밀번호와 기존 비밀번호가 같은 경우
         if check_password_hash(user.password, form.new_password1.data):
             flash("이전 비밀번호와 새 비밀번호가 일치합니다.")
             return redirect("#")
+        
+        ## 새로 사용할 비밀번호와 기존 비밀번호가 다른 경우
         if check_password_hash(user.password, form.before_password.data):
+            ## user 정보에 새로운 비밀번호 저장
             user.password = generate_password_hash(form.new_password1.data)
+            ## 비밀번호 변경일자 설정
             user.password_date = datetime.date.today()
+            ## DB에 수정사항 반영 및 업로드
             db.session.commit()
             flash("비밀번호 변경이 완료되었습니다. 바뀐 비밀번호로 로그인해주세요.")
             return redirect(url_for("auth.login_form"))

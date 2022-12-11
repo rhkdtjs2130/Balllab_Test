@@ -432,7 +432,7 @@ def check_reservation(phone):
             data_dict = {
                 'area': door_map_dict[request.form['area']],
             }
-            requests.post("http://43.200.247.167/door_open", data=data_dict)
+            requests.post("https://balllab-reserve.com/door_open", data=data_dict)
             flash("열렸습니다")
             redirect("#")
         else:

@@ -403,14 +403,36 @@ def reserve_court(phone:str, court_area:str, court_date:str, court_name:str, res
     ## 최종 비용 계산하기
     total_price = int(total_reserve_time * 2 * court_price)
 
-    ## 최종 비용이 보유한 포인트보다 큰 경우
-    if total_price >= user.point:
-        total_pay = total_price - user.point
-        used_point = user.point
-    ## 포인트가 최종 비용 보다 큰 경우
-    elif user.point > total_price:
+
+    ## Payapp 에 요할 결제 금액 계산
+    if total_price >= (user.point + user.admin_point):
+        total_pay = total_price - user.point - user.admin_point
+    elif (user.point + user.admin_point) > total_price:
         total_pay = 0
-        used_point = user.point - total_price
+        
+    if (user.point + user.admin_point) >= total_price:
+        if user.admin_point >= total_price:
+            used_admin_point = total_price
+            less_price = 0
+        else:
+            used_admin_point = user.admin_point
+            less_price = total_price - used_admin_point
+            
+        used_point = less_price
+    
+    else:
+        used_point = user.point
+        used_admin_point = user.admin_point
+    
+    
+    # ## 최종 비용이 보유한 포인트보다 큰 경우
+    # if total_price >= user.point:
+    #     total_pay = total_price - user.point
+    #     used_point = user.point
+    # ## 포인트가 최종 비용 보다 큰 경우
+    # elif user.point > total_price:
+    #     total_pay = 0
+    #     used_point = user.point - total_price
 
     ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST':
@@ -466,7 +488,7 @@ def reserve_court(phone:str, court_area:str, court_date:str, court_name:str, res
                     'price': total_pay,
                     'recvphone': user.phone,
                     "skip_cstpage": "y",
-                    "memo": f"{court_area} {used_point} {total_price}",
+                    "memo": f"{court_area} {used_point} {total_price} {used_admin_point}",
                     "var1": court_date,
                     "var2": str(tmp_list), ## Text로만 가능하기 떄문에 list를 str으로 바꿔서 전달
                 }
@@ -484,17 +506,30 @@ def reserve_court(phone:str, court_area:str, court_date:str, court_name:str, res
                 resp = resp.decode('utf-8')[6]
                 print("TEST", "State = ", resp, "Test")
 
-            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay, used_point=used_point, used_admin_point=used_admin_point))
         
         ## 포인트로 전체 결제가 가능한 경우
         else:
-            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay))
+            return redirect(url_for("main.request_pay_court", phone=user.phone, date=court_date, area=court_area, time=tmp_list, court=court_name, total_price=total_price, total_pay=total_pay, used_point=used_point, used_admin_point=used_admin_point))
 
     return render_template("user/reserve_court.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
 
 
-@bp.route('/user_menu/<phone>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/request_pay/court', methods=('GET', 'POST'))
-def request_pay_court(phone:str, date:str, area:str, time:str, court:str, total_pay:str, total_price:str):
+@bp.route(
+    '/user_menu/<phone>/<date>/<area>/<time>/<court>/<total_pay>/<total_price>/<used_admin_point>/<used_point>/request_pay/court', 
+    methods=('GET', 'POST')
+)
+def request_pay_court(
+    phone:str, 
+    date:str, 
+    area:str, 
+    time:str, 
+    court:str, 
+    total_pay:str, 
+    total_price:str, 
+    used_point:str, 
+    used_admin_point:str
+):
     """코트 결제가 완료되었는지 확인하는 페이지 Backend Code
 
     Args:
@@ -541,7 +576,8 @@ def request_pay_court(phone:str, date:str, area:str, time:str, court:str, total_
                 area=area,
                 time=time,
                 price=total_pay,
-                used_point=str(int(total_price) - int(total_pay)),
+                used_point=used_point,
+                used_admin_point=used_admin_point,
             ).order_by(PayDB.mul_no.desc()).first()
 
             ## 결제가 완료된 경우
@@ -565,7 +601,8 @@ def request_pay_court(phone:str, date:str, area:str, time:str, court:str, total_
                 area=area,
                 time=time,
                 price=total_pay,
-                used_point=total_price,
+                used_point=used_point,
+                used_admin_point=used_admin_point,
                 recvphone=user.phone,
                 pay_date=datetime.datetime.now(),
                 pay_type="point_only",
@@ -585,11 +622,8 @@ def request_pay_court(phone:str, date:str, area:str, time:str, court:str, total_
                 db.session.commit()
 
             ## 회원 보유 포인트에서 사용한 포인트를 제외하기 (포인트 결제)
-            if user.point >= int(total_price):
-                user.point = user.point - int(total_price)
-            ## 보유 포인트 보다 결제할 금액이 큰 경우 0으로 변환
-            else:
-                user.point = 0
+            user.point = user.point - int(used_point)
+            user.admin_point = user.admin_point - int(used_admin_point)
 
             ## DB에 수정사항 반영 및 업로드
             db.session.commit()
@@ -699,6 +733,7 @@ def pay_check():
             pay_type=request.form['pay_type'],
             pay_state=request.form['pay_state'],
             used_point=int(request.form['memo'].split()[1]),
+            used_admin_point=int(request.form['memo'].split()[3]),
         )
         ## DB 정보 업로드, 수정사항 반영 및 업로드
         db.session.add(db_update)
@@ -755,6 +790,8 @@ def pay_check():
             registration_court = request.form['goodname']
             registration_time = ast.literal_eval(request.form['var2'])
             registration_total_price = request.form['memo'].split()[2]
+            registration_used_point = request.form['memo'].split()[1]
+            registration_used_admin_point = request.form['memo'].split()[3]
 
             ## 예약 확정을 위해 ReserveCourt DB에서 예약 신청 정보 불러오기
             reservation_table = ReserveCourt.query.filter_by(
@@ -772,10 +809,8 @@ def pay_check():
                 db.session.commit()
             
             ## 코트를 현금 결제한 경우 결제 확정시 사용한 포인트 차감
-            if user.point >= int(registration_total_price):
-                user.point = user.point - int(registration_total_price)
-            else:
-                user.point = 0
+            user.point = user.point - int(registration_used_point)
+            user.admin_point = user.admin_point - int(registration_used_admin_point)
 
             db.session.commit()
 
@@ -898,6 +933,7 @@ def refund_reservation(phone:str, mul_no:str):
             if pay_info.pay_type == "point_only":
                 ## 회원 포인트에 환불할 포인트 반영
                 user.point = user.point + pay_info.used_point
+                user.admin_point = user.admin_point + pay_info.used_admin_point
                 ## PayDB에 환불 상태로 변경
                 pay_info.pay_state = '64'
                 ## DB에 수정사항 반영 및 업로드
@@ -946,6 +982,7 @@ def refund_reservation(phone:str, mul_no:str):
 
                 ## 환불 처리중 사용한 포인트 만큼 회원 포이트 보유량에 반영
                 user.point = user.point + pay_info.used_point
+                user.admin_point = user.admin_point + pay_info.used_admin_point
                 ## DB에 수정사항 반영 및 업로드
                 db.session.commit()
 

@@ -47,9 +47,6 @@ class ReserveCourtCourtForm(FlaskForm):
     
 class ReserveCourtTimeForm(FlaskForm):
     time = StringField("이용 시간", validators=[DataRequired("이용 시간대를 선택해주세요.")])
-    
-# class CheckReservationForm(FlaskForm):
-#     reserve = StringField("이용 시간", validators=[DataRequired("이용 시간대를 선택해주세요.")])
 
 class DoorOpenForm(FlaskForm):
     area = StringField("Area")

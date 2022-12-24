@@ -256,6 +256,7 @@ def refund_reservation(phone: str, mul_no: str):
         if pay_info.pay_type == "point_only":
             ## 회원 포인트에 환불할 포인트 반영
             user.point = user.point + pay_info.used_point
+            user.admin_point = user.admin_point + pay_info.used_admin_point
             ## PayDB에 환불 상태로 변경
             pay_info.pay_state = '64'
             ## DB에 수정사항 반영 및 업로드
@@ -304,6 +305,7 @@ def refund_reservation(phone: str, mul_no: str):
 
             ## 환불 처리중 사용한 포인트 만큼 회원 포이트 보유량에 반영
             user.point = user.point + pay_info.used_point
+            user.admin_point = user.admin_point + pay_info.used_admin_point
             ## DB에 수정사항 반영 및 업로드
             db.session.commit()
             
@@ -364,12 +366,12 @@ def change_user_info(admin_phone: str, user_phone: str):
     form = ChangeUserInfoForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        diff_point = form.point.data - user.point
+        diff_point = form.point.data - user.admin_point
 
         user.username = form.username.data
         user.phone = form.phone.data
         user.birth = form.birth.data
-        user.point = form.point.data
+        user.admin_point = form.point.data
         db.session.commit()
 
         admin = User.query.filter_by(phone=admin_phone).first()
@@ -489,13 +491,39 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
 
     total_price = total_price * len(court_nm_list)
 
-    if total_price >= user.point:
-        total_pay = total_price - user.point
-    elif user.point > total_price:
+    if total_price >= (user.point + user.admin_point):
+        total_pay = total_price - user.point - user.admin_point
+        
+    elif (user.point + user.admin_point) > total_price:
         total_pay = 0
 
     if request.method == 'POST':
+        if total_pay > 0:
+            flash("충전이 필요합니다.")
+            return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
+        if (user.point + user.admin_point) >= int(total_price):
+            if user.admin_point >= total_price:
+                used_admin_point = total_price
+                user.admin_point = user.admin_point - total_price
+                less_price = 0
+            else:
+                used_admin_point = user.admin_point
+                user.admin_point = 0
+                less_price = total_price - used_admin_point
+                
+            user.point = user.point - less_price
+            used_point = less_price
+            
+        else:
+            used_point = user.point
+            used_admin_point = user.admin_point
+            user.point = 0
+            user.admin_point = 0
+
+        db.session.commit()
+        
         pay_db = PayDB.query.all()
+        
         for court_nm in court_nm_list:
             for tmp_time in tmp_list:
 
@@ -535,7 +563,8 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
             area=court_area,
             time=str(tmp_list),
             price=total_pay,
-            used_point=total_price,
+            used_point=used_point,
+            used_admin_point=used_admin_point,
             recvphone=user.phone,
             pay_date=datetime.datetime.now(),
             pay_type="point_only",
@@ -543,13 +572,6 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
         )
 
         db.session.add(pay_add)
-        db.session.commit()
-
-        if user.point >= int(total_price):
-            user.point = user.point - int(total_price)
-        else:
-            user.point = 0
-
         db.session.commit()
 
         flash("예약 되었습니다.")
@@ -589,13 +611,36 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
 
     total_price = total_price * len(court_nm_list)
 
-    if total_price >= user.point:
-        total_pay = total_price - user.point
-    elif user.point > total_price:
+    if total_price >= (user.point + user.admin_point):
+        total_pay = total_price - user.point - user.admin_point
+    elif (user.point + user.admin_point) > total_price:
         total_pay = 0
-
+    
     if request.method == 'POST':
+        if total_pay > 0:
+            flash("충전이 필요합니다.")
+            return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_nm_list, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
+        if (user.point + user.admin_point) >= int(total_price):
+            if user.admin_point >= total_price:
+                used_admin_point = total_price
+                user.admin_point = user.admin_point - total_price
+                less_price = 0
+            else:
+                used_admin_point = user.admin_point
+                user.admin_point = 0
+                less_price = total_price - used_admin_point
+                
+            user.point = user.point - less_price
+            used_point = less_price
+            
+        else:
+            used_point = user.point
+            used_admin_point = user.admin_point
+            user.point = 0
+            user.admin_point = 0
+        
         pay_db = PayDB.query.all()
+        
         for court_nm in court_nm_list:
             for tmp_time in tmp_list:
 
@@ -635,7 +680,8 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
             area=court_area,
             time=str(tmp_list),
             price=total_pay,
-            used_point=total_price,
+            used_point=used_point,
+            used_admin_point=used_admin_point,
             recvphone=user.phone,
             pay_date=datetime.datetime.now(),
             pay_type="point_only",
@@ -643,13 +689,6 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
         )
 
         db.session.add(pay_add)
-        db.session.commit()
-
-        if user.point >= int(total_price):
-            user.point = user.point - int(total_price)
-        else:
-            user.point = 0
-
         db.session.commit()
 
         flash("예약 되었습니다.")
@@ -732,8 +771,11 @@ def court_status_onoff(admin_phone: str, court_area: str, court_nm: str):
     form = CourtOnOffForm()
 
     user = User.query.filter_by(phone=admin_phone).first()
+    
     court_table = ReservationStatus.query.filter_by(
-        area=court_area, court_nm=court_nm).first()
+        area=court_area, 
+        court_nm=court_nm
+    ).first()
 
     if request.method == "POST" and form.validate_on_submit():
         court_table.status = form.status.data

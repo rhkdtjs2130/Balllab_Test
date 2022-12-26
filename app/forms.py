@@ -51,6 +51,12 @@ class ReserveCourtTimeForm(FlaskForm):
 class DoorOpenForm(FlaskForm):
     area = StringField("Area")
     time = StringField("Time")
+
+class SendVideoForm(FlaskForm):
+    area = StringField("Area")
+    date = StringField("Date")
+    time = StringField("Time")
+    
     
 class ChangePasswordForm(FlaskForm):
     before_password = PasswordField("이전 비밀번호", validators=[DataRequired("이전 비밀번호를 입력해주세요.")])

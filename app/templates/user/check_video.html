@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+    $('.checkbox_limit').on('change', function() {
+    if($('.checkbox_limit:checked').length > 2) {
+        this.checked = false;
+    }
+    });
+</script>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 150px;">
+    <br>
+    <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
+        <b>나의 영상 관리</b>
+    </h5>
+
+    <div class="mx-1">
+        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
+            {% if reservation_table|length !=0 %}
+                {% for reservation in reservation_table %}
+                    <div class="border p-3 rounded-start bg-light">
+                        <div>
+                            <h4 style="color: mediumslateblue;">
+                                <b>
+                                    {{ reservation.area }} ({{ reservation.court }})
+                                </b>
+                            </h4>
+
+                            <h5 style="color: green;">
+                                <b>
+                                    {{ timetable[reservation.time|int] }}
+                                </b>
+                            </h5>
+                            <h6  style="color: grey">
+                                {{ reservation.date }}
+                            </h6>
+                        </div>
+                        <form method="post" name="DoorOpenForm">
+                            <input type="hidden", name="area", value="{{ reservation.court }}">
+                            <input type="hidden", name="date", value="{{ reservation.date }}">
+                            <input type="hidden", name="time", value="{{ reservation.time }}">
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">영상 요청</button>
+                            </div>
+                        </form>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <h5> 이용 이력이 없습니다.</h5>
+            {% endif %}
+        </div>
+    </div>
+    <div class="d-grid gap-2 my-3">
+        <a href="{{ url_for('main.user_menu', phone=user.phone) }}" class="btn btn-primary">확인</a>
+    </div>
+
+
+</div>
+
+{% endblock %}

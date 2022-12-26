@@ -29,6 +29,10 @@
             예약 확인
         </a>
 
+        <a href="{{ url_for('main.check_video', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
+            나의 영상 관리
+        </a>
+
         <a href="{{ url_for('main.change_password', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             비밀번호 변경
         </a>

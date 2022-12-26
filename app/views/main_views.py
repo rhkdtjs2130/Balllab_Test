@@ -2,17 +2,22 @@ import urllib
 import ast
 import requests
 import datetime
-import ast
+import smtplib
 
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from flask import Blueprint, url_for, render_template, request, flash
-from werkzeug.utils import redirect
-from werkzeug.security import check_password_hash, generate_password_hash
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 from sqlalchemy import desc
 from time import sleep
+from werkzeug.utils import redirect
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, PointTable, CourtPriceTable, ReservationStatus
 from app import db
-from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm
+from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm, SendVideoForm
 
 bp = Blueprint("main", __name__, url_prefix='/')
 
@@ -1042,3 +1047,156 @@ def change_password(phone:str):
             return redirect("#")
 
     return render_template("user/change_password.html", user=user, form=form)
+
+@bp.route("/user_menu/check_video/<phone>", methods=["GET", "POST"])
+def check_video(phone:str):
+    """(회원, 영상 전송) 영상 전송 페이지 Backend Code
+
+    Args:
+        phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 코트 예약 결제 확인 페이지 html 렌더링
+    """
+    ## 도어락 제어를 위한 Form 불러오기
+    form = SendVideoForm()
+    
+    ## 현재 시점의 14일 전 날짜 정보 불러오기 (datetime.date)
+    date = datetime.date.today() - datetime.timedelta(days=14)
+
+    user = User.query.filter_by(phone=phone).first()
+
+    ## 회원의 코트 예약 확정된 정보 불러오기 (현재 일 포함 및 이후 일자) 
+    reservation_table = ReserveCourt.query.filter_by(phone=phone, buy=1)\
+        .filter(ReserveCourt.court.in_(['1번', '3층', '4층']))\
+        .filter(ReserveCourt.date >= date)\
+        .order_by(ReserveCourt.date)\
+        .order_by(ReserveCourt.time)\
+        .all()
+        
+    ## Post 요청할 데이터 정리
+    if request.method == "POST":
+        links = find_generate_video_link(
+            court=request.form['area'],
+            date=request.form['date'],
+            time=request.form['time'],
+        )
+        if user.agreement_option == 1:
+            if len(links) == 0:
+                flash("영상 촬영을 하지 않았습니다.")
+                return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
+            else:
+                send_mail(
+                    file_list=links,
+                    to_email=user.email
+                )
+                flash("영상을 전송했습니다.")
+                return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
+        else:
+            flash("선택 약관을 동의하지 않아 서비스를 이용할 수 없습니다.")
+            return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
+
+    return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
+
+def find_generate_video_link(court, date, time):
+    
+    gauth = GoogleAuth()
+    # Try to load saved client credentials
+    gauth.LoadCredentialsFile("mycreds.txt")
+    if gauth.credentials is None:
+        # Authenticate if they're not there
+        gauth.LocalWebserverAuth()
+    elif gauth.access_token_expired:
+        # Refresh them if expired
+        gauth.Refresh()
+    else:
+        # Initialize the saved creds
+        gauth.Authorize()
+    # Save the current credentials to a file
+    gauth.SaveCredentialsFile("mycreds.txt")
+    
+    drive = GoogleDrive(gauth)
+
+    if court == "1번":
+        ## 어린이대공원점
+        file_id = '1-2cQcKlR-rk7PM79QTUk3ry9_s6iNBW9'
+    elif court == "3층":
+        ## 성수 3층
+        file_id = "1-3aN_0KVFKSRZ2wzmNI5rBmsZ00IcTIm"
+    elif court == "4층":
+        ## 성수 4층
+        file_id = "1-1zgtrMcN8hXvjOcGoZF-k0oaT1Ti0mj"
+    
+    file_list = drive.ListFile(
+        {
+            "q": f"'{file_id}' in parents and trashed=False",
+        }
+    ).GetList()
+    
+
+    game_date = date
+    game_time = timetable[int(time)]
+    start_time = game_time.split()[0].replace(":", "-")
+    end_time = game_time.split()[-1].replace(":", "-")
+    
+    start_game = f"{game_date} {start_time}-00"
+    end_game = f"{game_date} {end_time}-00"
+    
+    file_list = [x for x in file_list if (x['title'].split('.')[0] >= start_game) and (x['title'].split('.')[0] <= end_game)]
+
+    file_links = []
+
+    for file in file_list:
+        #SET PERMISSION
+        permission = file.InsertPermission(
+            {
+                'type': 'anyone',
+                'value': 'anyone',
+                'role': 'reader'
+            }
+        )
+        #To use the image in Gsheet we need to modify the link as follows
+        link = file['id']
+        link = f'https://drive.google.com/file/d/{link}/view?usp=share_link'
+        file_links.append(link)
+    
+    return file_links
+
+def send_mail(file_list, to_email):
+    
+    gmail_smtp = 'smtp.gmail.com'
+
+    smpt = smtplib.SMTP_SSL(
+        host=gmail_smtp, 
+    )
+
+    email_id = "admin@balllab.com"
+    email_password = "rpiyeackxhaucyce"
+
+    smpt.login(
+        user=email_id,
+        password=email_password
+    )
+
+    msg = MIMEMultipart()
+
+    msg['Subject'] = f"요청하신 영상 데이터 전달드립니다."
+    msg['From'] = "lkh256@gmail.com"
+    msg['To'] = to_email
+    
+    ## 메일 내용 작성
+    content = f"안녕하세요.\n요청하신 영상 파일 {len(file_list)}개 공유드립니다.\n"
+
+    for file in file_list:
+        content += f"{file}\n"
+    content += "감사합니다.\n주식회사 볼랩 드림"
+    
+    content_part = MIMEText(content, "plain")
+    msg.attach(content_part)
+
+    to_mail = "lkh256@gmail.com"
+
+    smpt.sendmail(email_id, to_mail, msg.as_string())
+    smpt.quit()
+    
+    return None

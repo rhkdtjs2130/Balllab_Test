@@ -1170,8 +1170,8 @@ def send_mail(file_list, to_email):
         host=gmail_smtp, 
     )
 
-    email_id = "admin@balllab.com"
-    email_password = "kiidcblvcgbxmwtv"
+    email_id = "admin@balllab.co.kr"
+    email_password = "aujdkzlychlbnnen"
 
     smpt.login(
         user=email_id,
@@ -1194,7 +1194,7 @@ def send_mail(file_list, to_email):
     content_part = MIMEText(content, "plain")
     msg.attach(content_part)
 
-    smpt.sendmail(email_id, to_mail, msg.as_string())
+    smpt.sendmail(email_id, to_email, msg.as_string())
     smpt.quit()
     
     return None

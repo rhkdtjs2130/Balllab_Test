@@ -1171,7 +1171,7 @@ def send_mail(file_list, to_email):
     )
 
     email_id = "admin@balllab.com"
-    email_password = "rpiyeackxhaucyce"
+    email_password = "kiidcblvcgbxmwtv"
 
     smpt.login(
         user=email_id,
@@ -1181,7 +1181,7 @@ def send_mail(file_list, to_email):
     msg = MIMEMultipart()
 
     msg['Subject'] = f"요청하신 영상 데이터 전달드립니다."
-    msg['From'] = "lkh256@gmail.com"
+    msg['From'] = email_id
     msg['To'] = to_email
     
     ## 메일 내용 작성
@@ -1193,8 +1193,6 @@ def send_mail(file_list, to_email):
     
     content_part = MIMEText(content, "plain")
     msg.attach(content_part)
-
-    to_mail = "lkh256@gmail.com"
 
     smpt.sendmail(email_id, to_mail, msg.as_string())
     smpt.quit()

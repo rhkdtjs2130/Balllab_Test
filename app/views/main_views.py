@@ -1066,16 +1066,23 @@ def check_video(phone:str):
         
     ## Post 요청할 데이터 정리
     if request.method == "POST":
+        
+        ## 요청 시점에 영상 데이터가 있는지 Google Drive에서 검색하고 불러오기
         links = find_generate_video_link(
             court=request.form['area'],
             date=request.form['date'],
             time=request.form['time'],
         )
+        
+        ## 회원이 선택 약관에 동의한 경우 처리
         if user.agreement_option == 1:
+            ## 영상이 없는 경우
             if len(links) == 0:
                 flash("영상 촬영을 하지 않았습니다.")
                 return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
+            ## 영상이 있는 경우
             else:
+                ## 회원이 등록한 email로 영상 다운로드 링크 보내기
                 send_mail(
                     file_list=links,
                     to_email=user.email
@@ -1088,21 +1095,34 @@ def check_video(phone:str):
 
     return render_template("user/check_video.html", user=user, reservation_table=reservation_table, timetable=timetable, form=form)
 
-def find_generate_video_link(court, date, time):
-    
+def find_generate_video_link(court:str, date:str, time:str) -> list:
+    """(회원, 영상 전송) 영상 공유 링크 생성
+
+    Args:
+        court (str): 코트명
+        date (str): 이용 일자
+        time (str): 이용 시간
+
+    Returns:
+        file_links: 공유 링크가 담긴 list
+    """
+    ## Google Auth 인증 객체 불러오기
     gauth = GoogleAuth()
-    # Try to load saved client credentials
+    
+    # 인증서가 있는 경우 불러오기
     gauth.LoadCredentialsFile("mycreds.txt")
+    
     if gauth.credentials is None:
-        # Authenticate if they're not there
+        ## 토큰이 없는 경우 새로 인증하기
         gauth.LocalWebserverAuth()
     elif gauth.access_token_expired:
-        # Refresh them if expired
+        ## 토큰의 이용 기간이 지나면 Refresh하기
         gauth.Refresh()
     else:
-        # Initialize the saved creds
+        ## 저장된 토큰이 있으면 인증하기
         gauth.Authorize()
-    # Save the current credentials to a file
+        
+    # 인증서를 저장하기
     gauth.SaveCredentialsFile("mycreds.txt")
     
     drive = GoogleDrive(gauth)
@@ -1110,9 +1130,11 @@ def find_generate_video_link(court, date, time):
     if court == "1번":
         ## 어린이대공원점
         file_id = '1-2cQcKlR-rk7PM79QTUk3ry9_s6iNBW9'
+        
     elif court == "3층":
         ## 성수 3층
         file_id = "1-3aN_0KVFKSRZ2wzmNI5rBmsZ00IcTIm"
+        
     elif court == "4층":
         ## 성수 4층
         file_id = "1-1zgtrMcN8hXvjOcGoZF-k0oaT1Ti0mj"
@@ -1123,21 +1145,26 @@ def find_generate_video_link(court, date, time):
         }
     ).GetList()
     
-
+    ## 요청 일시 처리
     game_date = date
     game_time = timetable[int(time)]
     start_time = game_time.split()[0].replace(":", "-")
     end_time = game_time.split()[-1].replace(":", "-")
     
+    ## 검색을 위한 이용 시작 시점과 종료 시점을 str type으로 처리
     start_game = f"{game_date} {start_time}-00"
     end_game = f"{game_date} {end_time}-00"
     
+    ## 전체 영상 정보에서 해당 조건에 맞는지 검색하기
     file_list = [x for x in file_list if (x['title'].split('.')[0] >= start_game) and (x['title'].split('.')[0] <= end_game)]
 
+    ## 빈 파일 링크 리스트 생성
     file_links = []
 
+    ## 파일 리스트에 있는 정보를 데이터 전송을 위한 링크 생성
     for file in file_list:
-        #SET PERMISSION
+        
+        ## 공유가 가능하도록 파일의 접근 권한을 변경
         permission = file.InsertPermission(
             {
                 'type': 'anyone',
@@ -1145,31 +1172,46 @@ def find_generate_video_link(court, date, time):
                 'role': 'reader'
             }
         )
-        #To use the image in Gsheet we need to modify the link as follows
+        ## 파일 전송용 링크 생성
         link = file['id']
         link = f'https://drive.google.com/file/d/{link}/view?usp=share_link'
         file_links.append(link)
     
     return file_links
 
-def send_mail(file_list, to_email):
+def send_mail(file_list:list, to_email:str) -> None:
+    """(회원, 영상 전송) 메일 전송 코드
+
+    Args:
+        filelist (list): 코트명
+        to_email (str): 회원 email
+
+    Returns:
+        None
+    """
     
+    ## 구글 IMOP 서버 주소
     gmail_smtp = 'smtp.gmail.com'
 
+    ## 서버 링크 설정
     smpt = smtplib.SMTP_SSL(
         host=gmail_smtp, 
     )
 
+    ## 메일 서버에 로그인할 아이디 페스워드 설정
     email_id = "admin@balllab.co.kr"
     email_password = "aujdkzlychlbnnen"
 
+    ## 로그인 요청하기
     smpt.login(
         user=email_id,
         password=email_password
     )
 
+    ## 메일 전송을 위한 객체 선언
     msg = MIMEMultipart()
 
+    ## Mail 전송을 위한 기본 정보 입력
     msg['Subject'] = f"요청하신 영상 데이터 전달드립니다."
     msg['From'] = email_id
     msg['To'] = to_email
@@ -1177,14 +1219,19 @@ def send_mail(file_list, to_email):
     ## 메일 내용 작성
     content = f"안녕하세요.\n요청하신 영상 파일 {len(file_list)}개 공유드립니다.\n"
 
+    ## 메일에 파일 링크 삽입
     for file in file_list:
         content += f"{file}\n"
     content += "감사합니다.\n주식회사 볼랩 드림"
     
+    ## 메일 내용을 Mail 객체에 삽입
     content_part = MIMEText(content, "plain")
     msg.attach(content_part)
 
+    ## 메일 전송하기
     smpt.sendmail(email_id, to_email, msg.as_string())
+    
+    ## 메일 서버 닫기
     smpt.quit()
     
     return None

@@ -428,16 +428,6 @@ def reserve_court(phone:str, court_area:str, court_date:str, court_name:str, res
     else:
         used_point = user.point
         used_admin_point = user.admin_point
-    
-    
-    # ## 최종 비용이 보유한 포인트보다 큰 경우
-    # if total_price >= user.point:
-    #     total_pay = total_price - user.point
-    #     used_point = user.point
-    # ## 포인트가 최종 비용 보다 큰 경우
-    # elif user.point > total_price:
-    #     total_pay = 0
-    #     used_point = user.point - total_price
 
     ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST':

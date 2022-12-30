@@ -362,20 +362,39 @@ def user_check(phone: str):
 
 @bp.route('/admin/user_check/change_user_info/<admin_phone>/<user_phone>', methods=['GET', 'POST'])
 def change_user_info(admin_phone: str, user_phone: str):
+    """유저 정보 수정 페지 Backend Code
+
+    Args:
+        admin_phone (str): 수정하는 관리자 핸드폰 번호
+        user_phone (str): 회원 핸드폰 번호
+
+    Returns:
+        처음: 유저 정보 수정 페이지 html 렌더링
+    """
+
+    ## 유저 회원 정보 불러오기
     user = User.query.filter_by(phone=user_phone).first()
+    
+    ## 유저 회원 정보 수정을 위한 Form 불러오기
     form = ChangeUserInfoForm()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
+        
+        ## 관리자가 지급한 포인트와 기존에 갖고 있던 포인트 차이 계산
         diff_point = form.point.data - user.admin_point
 
+        ## 수정된 데이터를 반영 (수정되지 않은 경우 기본값이 입력됌)
         user.username = form.username.data
         user.phone = form.phone.data
         user.birth = form.birth.data
         user.admin_point = form.point.data
         db.session.commit()
 
+        ## 내용을 수정한 관리자 정보를 불러오기
         admin = User.query.filter_by(phone=admin_phone).first()
 
+        ## 포인트 지급 테이블에 로그 추가하기
         grant_point = GrantPoint(
             date=datetime.datetime.today(),
             admin_name=admin.username,
@@ -384,10 +403,15 @@ def change_user_info(admin_phone: str, user_phone: str):
             user_phone=user.phone,
             point=diff_point,
         )
+        
+        ## DB에 추가한 정보 반영 및 업데이트
         db.session.add(grant_point)
         db.session.commit()
 
+        ## 수정이 완료 됬다고 업로드 했음
         flash("반영 되었습니다.")
+        
+        ## 수정된 유저의 정보를 불러오기
         user = User.query.filter_by(phone=user_phone).first()
 
     return render_template("admin/change_user_info.html", user=user, admin_phone=admin_phone, form=form)
@@ -395,10 +419,23 @@ def change_user_info(admin_phone: str, user_phone: str):
 
 @bp.route('/admin/reserve_court/<admin_phone>/', methods=['GET', 'POST'])
 def reserve_court(admin_phone: str):
+    """(전체) 관리자 코트 예약 페이지 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 코트 및 날짜 선택 페이지 html 렌더링
+        Post 호출 시: 시간 선택 페이지 html 렌더링
+    """
+
+    ## 지점 선택 및 날짜 선택 Form 불러오기
     form = ReserveCourtAreaDateForm()
+    
+    ## 현재 날짜 불러오기
     cur_date = datetime.date.today()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
         return redirect(url_for('admin.reserve_court_time', admin_phone=admin_phone, court_area=form.area.data, court_date=form.date.data))
 
@@ -407,10 +444,23 @@ def reserve_court(admin_phone: str):
 
 @bp.route('/admin/reserve_court_separate/<admin_phone>/', methods=['GET', 'POST'])
 def reserve_court_separate(admin_phone: str):
+    """(개별) 관리자 코트 예약 페이지 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 개별 코트 및 날짜 선택 페이지 html 렌더링
+        Post 호출 시: 개별 코트 시간 선택 페이지 html 렌더링
+    """
+    
+    ## 지점 선택 및 날짜 선택 Form 불러오기
     form = ReserveCourtAreaDateForm()
+    
+    ## 현재 날짜 불러오기
     cur_date = datetime.date.today()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
         return redirect(url_for('admin.reserve_court_select_separate', admin_phone=admin_phone, court_area=form.area.data, court_date=form.date.data))
 
@@ -419,12 +469,28 @@ def reserve_court_separate(admin_phone: str):
 
 @bp.route('/admin/reserve_court_select_separate/<admin_phone>/<court_area>/<court_date>', methods=['GET', 'POST'])
 def reserve_court_select_separate(admin_phone: str, court_area: str, court_date: str):
+    """(개별) 관리자 코트 선택 페이지 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 선택한 지점
+        court_date (str): 선택한 이용 날짜
+
+    Returns:
+        처음: 개별 코트 및 날짜 선택 페이지 html 렌더링
+        Post 호출 시: 개별 코트 시간 선택 페이지 html 렌더링
+    """
+    
+    ## 코트 선택 Form 불러오기
     form = ReserveCourtCourtForm()
 
+    ## 코트 오픈 정보를 DB에서 불러오기 Status가 이면 예약 불가능
     court_status_table = ReservationStatus.query.filter_by(
-        area=court_area, status="1").order_by(ReservationStatus.id).all()
+        area=court_area, 
+        status="1"
+    ).order_by(ReservationStatus.id).all()
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
         court_area = court_area
         court_date = court_date
@@ -436,12 +502,37 @@ def reserve_court_select_separate(admin_phone: str, court_area: str, court_date:
 
 @bp.route('/admin/reserve_court_separate/time/<court_area>/<court_name>/<court_date>/<admin_phone>', methods=['GET', 'POST'])
 def reserve_court_time_separate(admin_phone: str, court_area: str, court_date: str, court_name: str):
+    """(개별) 관리자 코트 이용 시간 선택 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 선택한 지점
+        court_date (str): 선택한 이용 날짜
+        court_name (str): 선택한 코트 명
+
+    Returns:
+        처음: 이용 시간 선택 페이지 html 렌더링
+        Post 호출 시: 결제 요청 페이지 html 렌더링
+    """
+    
+    ## 코트 시간 선택 Form 불러오기
     form = ReserveCourtTimeForm()
+    
+    ## 해당 날짜에 예약 되어 있는 코드가 있는지 정보 조회
     court_info = ReserveCourt.query.filter_by(
-        area=court_area, court=court_name, date=court_date, buy=1).all()
+        area=court_area, 
+        court=court_name, 
+        date=court_date, 
+        buy=1
+    ).all()
+    
+    ## 예약 정보를 List 형식으로 변환
     court_info = [int(x.time) for x in court_info]
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == "POST" and form.validate_on_submit():
+        
+        ## 선택한 코트 이용 시간 정보 불러오기
         reserve_times = request.form.getlist("time")
         return redirect(url_for("admin.reserve_court_check_separate", admin_phone=admin_phone, court_area=court_area, court_name=court_name, court_date=court_date, reserve_times=reserve_times))
 
@@ -450,13 +541,38 @@ def reserve_court_time_separate(admin_phone: str, court_area: str, court_date: s
 
 @bp.route('/admin/reserve_court/time/<court_area>/<court_date>/<admin_phone>', methods=['GET', 'POST'])
 def reserve_court_time(admin_phone: str, court_area: str, court_date: str):
+    """(전체) 관리자 코트 이용 시간 선택 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 선택한 지점
+        court_date (str): 선택한 이용 날짜
+        court_name (str): 선택한 코트 명
+
+    Returns:
+        처음: 이용 시간 선택 페이지 html 렌더링
+        Post 호출 시: 결제 요청 페이지 html 렌더링
+    """
+    
+    ## 코트 시간 선택 Form 불러오기
     form = ReserveCourtTimeForm()
+    
+    ## 해당 날짜에 예약 되어 있는 코드가 있는지 정보 조회
     court_info = ReserveCourt.query.filter_by(
-        area=court_area, date=court_date, buy=1).all()
+        area=court_area, 
+        date=court_date, 
+        buy=1
+    ).all()
+    
+    ## 예약 정보를 List 형식으로 변환
     court_info = [int(x.time) for x in court_info]
 
+    ## POST 요청 및 form에 정의한 것과 동일한 경우 아래 if 문이 실행
     if request.method == "POST" and form.validate_on_submit():
+        
+        ## 선택한 코트 이용 시간 정보 불러오기
         reserve_times = request.form.getlist("time")
+        
         return redirect(url_for("admin.reserve_court_check", admin_phone=admin_phone, court_area=court_area, court_date=court_date, reserve_times=reserve_times))
 
     return render_template("admin/reserve_court_time.html", form=form, timetable=timetable, court_info=court_info)
@@ -464,43 +580,71 @@ def reserve_court_time(admin_phone: str, court_area: str, court_date: str):
 
 @bp.route("/admin/reserve_court_separate/reserve_court_check/<admin_phone>/<court_area>/<court_name>/<court_date>/<reserve_times>/", methods=('GET', 'POST'))
 def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: str, court_name: str, reserve_times: str):
+    """(개별) 코트 결제 요청 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 회원 핸드폰 번호
+        court_area (str): 선택한 지점
+        court_date (str): 선택한 이용 날짜
+        court_name (str): 선택한 코트 명
+        reserve_times (str): 선택한 코트 이용시간
+
+    Returns:
+        처음: 코트 예약 결제 페이지 html 렌더링
+        Post 호출 시: 결제 확인 페이지로 이동
+    """
+    
+    ## 코트 결제 요청을 위한 Form 불러오기
     form = ReserveCourtForm()
 
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
 
+    ## "[1, 2, 3]" -> [1, 2, 3] str을 list로 변환
     reserve_times = ast.literal_eval(reserve_times)
 
+    ## 예약 하려는 시간을 list type으로 변환
+    ## 시간 복수 선택한 경우
     if type(reserve_times) != int:
         tmp_list = []
         for reserv_time in reserve_times:
             tmp_list.append(int(reserv_time))
+    ## 단일 시간 선택한 경우
     else:
         tmp_list = [reserve_times]
 
+    ## 시간 복수 선택한 경우 이용시간 계산
     if len(tmp_list) > 1:
         total_reserve_time = len(tmp_list) / 2  # 시간
+    ## 시간 단일 선택한 경우 이용시간 계산
     else:
         total_reserve_time = 0.5
 
+    ## 선택한 코트의 이용 비용 불러오기
     court_price = CourtPriceTable.query.filter_by(
-        area=court_area).first().price
+            area=court_area
+        ).first().price
 
+    ## 최종 비용 계산하기
     total_price = int(total_reserve_time * 2 * court_price)
-
     court_nm_list = [court_name]
+    total_price = total_price * len(court_nm_list) ## 총금액 계산
 
-    total_price = total_price * len(court_nm_list)
-
+    ## DB에 업데이트 할 지출 비용 계산
     if total_price >= (user.point + user.admin_point):
         total_pay = total_price - user.point - user.admin_point
-        
     elif (user.point + user.admin_point) > total_price:
         total_pay = 0
 
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST':
+        
+        ## 관리자 예약의 경우 포인트 결제로만 진행되기 떄문에 현금 지출이 1원 이상인 경우 예약이 진행되지 않음
         if total_pay > 0:
             flash("충전이 필요합니다.")
             return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_name, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
+        
+        ## Point 결제인 경우 회원 DB에서 포인트 차감
         if (user.point + user.admin_point) >= int(total_price):
             if user.admin_point >= total_price:
                 used_admin_point = total_price
@@ -513,20 +657,24 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
                 
             user.point = user.point - less_price
             used_point = less_price
-            
+        ## 현금 결제가 있는 경우 아래 로직이 돌아가나 현재는 돌아가지 않는 코드임
         else:
             used_point = user.point
             used_admin_point = user.admin_point
             user.point = 0
             user.admin_point = 0
 
+        ## DB 수정사항 반영 및 업로드
         db.session.commit()
         
+        ## 결제정보 DB 불러오기
         pay_db = PayDB.query.all()
         
+        ## 예약한 코드 별로 아래 코드가 동작함
         for court_nm in court_nm_list:
             for tmp_time in tmp_list:
 
+                ## 예약 정보 불러오기
                 reserve_check = ReserveCourt.query.filter_by(
                     date=datetime.datetime.strptime(court_date, "%Y-%m-%d"),
                     area=court_area,
@@ -534,11 +682,11 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
                     time=str(tmp_time),
                 ).first()
 
+                ## 예약 되어 있지 않은 경우 예약 정보를 DB에 입력
                 if reserve_check == None:
-                    ## Reserve Court ##
+                    ## 코트 예약 DB에 데이터 업로드
                     court_reserve = ReserveCourt(
-                        date=datetime.datetime.strptime(
-                            court_date, "%Y-%m-%d"),
+                        date=datetime.datetime.strptime(court_date, "%Y-%m-%d"),
                         area=court_area,
                         time=str(tmp_time),
                         court=court_nm,
@@ -548,14 +696,16 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
                         mul_no=f"point_{len(pay_db)}",
                         buy=1,
                     )
+                    ## DB 데이터 업로드
                     db.session.add(court_reserve)
                     db.session.commit()
                 else:
-                    ## Reserve Court ##
+                    ## 이전에 예약했다가 취소한 경우 정보 수정 및 반영
                     reserve_check.buy = 1
                     reserve_check.mul_no = f"point_{len(pay_db)}"
                     db.session.commit()
 
+        ## 결제 정보 DB에 관리자 예약 정보로 업데이트
         pay_add = PayDB(
             mul_no=f"point_{len(pay_db)}",
             goodname=f"관리자예약_{court_area}_{court_name}",
@@ -571,9 +721,11 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
             pay_state="4",
         )
 
+        ## DB 수정사항 반영 및 업로드
         db.session.add(pay_add)
         db.session.commit()
-
+        
+        ## 예약 처리가 되었음을 flash 띄우기
         flash("예약 되었습니다.")
 
         return redirect(url_for("admin.admin_menu", phone=admin_phone))
@@ -583,43 +735,72 @@ def reserve_court_check_separate(admin_phone: str, court_area: str, court_date: 
 
 @bp.route("/admin/reserve_court/reserve_court_check/<admin_phone>/<court_area>/<court_date>/<reserve_times>/", methods=('GET', 'POST'))
 def reserve_court_check(admin_phone: str, court_area: str, court_date: str, reserve_times: str):
+    """(전체) 코트 결제 요청 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 회원 핸드폰 번호
+        court_area (str): 선택한 지점
+        court_date (str): 선택한 이용 날짜
+        court_name (str): 선택한 코트 명
+        reserve_times (str): 선택한 코트 이용시간
+
+    Returns:
+        처음: 코트 예약 결제 페이지 html 렌더링
+        Post 호출 시: 결제 확인 페이지로 이동
+    """
+    
+    ## 코트 결제 요청을 위한 Form 불러오기
     form = ReserveCourtForm()
 
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
 
+    ## "[1, 2, 3]" -> [1, 2, 3] str을 list로 변환
     reserve_times = ast.literal_eval(reserve_times)
 
+    ## 예약 하려는 시간을 list type으로 변환
+    ## 시간 복수 선택한 경우
     if type(reserve_times) != int:
         tmp_list = []
         for reserv_time in reserve_times:
             tmp_list.append(int(reserv_time))
+    ## 단일 시간 선택한 경우
     else:
         tmp_list = [reserve_times]
-
+    
+    ## 시간 복수 선택한 경우 이용시간 계산
     if len(tmp_list) > 1:
         total_reserve_time = len(tmp_list) / 2  # 시간
+    ## 시간 단일 선택한 경우 이용시간 계산
     else:
         total_reserve_time = 0.5
 
+    ## 선택한 코트의 이용 비용 불러오기
     court_price = CourtPriceTable.query.filter_by(
-        area=court_area).first().price
+            area=court_area
+        ).first().price
 
+    ## 최종 비용 계산하기
     total_price = int(total_reserve_time * 2 * court_price)
-
     court_tmp = ReservationStatus.query.filter_by(area=court_area).all()
-    court_nm_list = [court.court_nm for court in court_tmp]
+    court_nm_list = [court.court_nm for court in court_tmp] # 지점 별 코트 정보
+    total_price = total_price * len(court_nm_list) ## 총금액 계산
 
-    total_price = total_price * len(court_nm_list)
-
+    ## DB에 업데이트 할 지출 비용 계산
     if total_price >= (user.point + user.admin_point):
         total_pay = total_price - user.point - user.admin_point
     elif (user.point + user.admin_point) > total_price:
         total_pay = 0
     
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST':
+        
+        ## 관리자 예약의 경우 포인트 결제로만 진행되기 떄문에 현금 지출이 1원 이상인 경우 예약이 진행되지 않음
         if total_pay > 0:
             flash("충전이 필요합니다.")
             return render_template("admin/reserve_court_check.html", form=form, user=user, court_area=court_area, court_name=court_nm_list, court_date=court_date, total_reserve_time=total_reserve_time, total_price=total_price, total_pay=total_pay, tmp_list=tmp_list, timetable=timetable)
+        
+        ## Point 결제인 경우 회원 DB에서 포인트 차감
         if (user.point + user.admin_point) >= int(total_price):
             if user.admin_point >= total_price:
                 used_admin_point = total_price
@@ -632,18 +813,24 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
                 
             user.point = user.point - less_price
             used_point = less_price
-            
+        ## 현금 결제가 있는 경우 아래 로직이 돌아가나 현재는 돌아가지 않는 코드임
         else:
             used_point = user.point
             used_admin_point = user.admin_point
             user.point = 0
             user.admin_point = 0
         
+        ## DB 수정사항 반영 및 업로드
+        db.session.commit()
+        
+        ## 결제정보 DB 불러오기
         pay_db = PayDB.query.all()
         
+        ## 예약한 코드 별로 아래 코드가 동작함
         for court_nm in court_nm_list:
             for tmp_time in tmp_list:
-
+                
+                ## 예약 정보 불러오기
                 reserve_check = ReserveCourt.query.filter_by(
                     date=datetime.datetime.strptime(court_date, "%Y-%m-%d"),
                     area=court_area,
@@ -651,8 +838,9 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
                     time=str(tmp_time),
                 ).first()
 
+                ## 예약 되어 있지 않은 경우 예약 정보를 DB에 입력
                 if reserve_check == None:
-                    ## Reserve Court ##
+                    ## 코트 예약 DB에 데이터 업로드
                     court_reserve = ReserveCourt(
                         date=datetime.datetime.strptime(
                             court_date, "%Y-%m-%d"),
@@ -665,14 +853,16 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
                         mul_no=f"point_{len(pay_db)}",
                         buy=1,
                     )
+                    ## DB 데이터 업로드
                     db.session.add(court_reserve)
                     db.session.commit()
                 else:
-                    ## Reserve Court ##
+                    ## 이전에 예약했다가 취소한 경우 정보 수정 및 반영
                     reserve_check.buy = 1
                     reserve_check.mul_no = f"point_{len(pay_db)}"
                     db.session.commit()
 
+        ## 결제 정보 DB에 관리자 예약 정보로 업데이트
         pay_add = PayDB(
             mul_no=f"point_{len(pay_db)}",
             goodname=f"관리자예약_{court_area}_전체",
@@ -688,9 +878,11 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
             pay_state="4",
         )
 
+        ## DB 수정사항 반영 및 업로드
         db.session.add(pay_add)
         db.session.commit()
-
+        
+        ## 예약 처리가 되었음을 flash 띄우기
         flash("예약 되었습니다.")
 
         return redirect(url_for("admin.admin_menu", phone=admin_phone))
@@ -700,23 +892,58 @@ def reserve_court_check(admin_phone: str, court_area: str, court_date: str, rese
 
 @bp.route('/admin/product_management/<admin_phone>/', methods=['GET', 'POST'])
 def product_management(admin_phone: str):
+    """상품 관리 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 상품 관리 페이지 html 렌더링
+    """
     user = User.query.filter_by(phone=admin_phone).first()
     return render_template("admin/product_management.html", user=user)
 
 
 @bp.route('/admin/point_price_management/<admin_phone>/', methods=['GET', 'POST'])
 def point_price_management(admin_phone: str):
+    """포인트 가격 관리 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 포인트 가격 관리 페이지 html 렌더링
+    """
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## 포인트 가격 DB 불러오기
     point_table = PointTable.query.order_by(PointTable.price).all()
     return render_template("admin/point_price_management.html", user=user, point_table=point_table)
 
 
 @bp.route('/admin/point_price_change_management/<admin_phone>/<price>', methods=['GET', 'POST'])
 def point_price_change_management(admin_phone: str, price: str):
+    """금액 별 포인트 지급량 관리 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        price (str): 지급할 포인트양 
+
+    Returns:
+        처음: 가격 별 포인트 지금량 관리 페이지 html 렌더링
+    """
+    
+    ## 금액 별 포인트 지금량 조정을 위한 Form 불러오기
     form = PointManagementForm()
+    
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## PointTable DB에서 가격별 포인트 정보 불러오기
     point_table = PointTable.query.filter_by(price=price).first()
 
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
         point_table.point = form.point.data
         db.session.commit()
@@ -727,18 +954,47 @@ def point_price_change_management(admin_phone: str, price: str):
 
 @bp.route('/admin/court_price_management/<admin_phone>/', methods=['GET', 'POST'])
 def court_price_management(admin_phone: str):
+    """지점별 코트 가격 관리 페이지 Backend Code
+
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 가격 별 포인트 지금량 관리 페이지 html 렌더링
+    """
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## 지점별 코트 가격 DB 불러오기
     court_table = CourtPriceTable.query.order_by(CourtPriceTable.id).all()
     return render_template("admin/court_price_management.html", user=user, court_table=court_table)
 
 
 @bp.route('/admin/court_price_management/<court_area>/<admin_phone>/', methods=['GET', 'POST'])
 def court_price_change_management(admin_phone: str, court_area: str):
-    form = CourtManagementForm()
-    user = User.query.filter_by(phone=admin_phone).first()
-    court_table = CourtPriceTable.query.filter_by(area=court_area).first()
+    """지점 별 가격 변경 페이지 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 지점 명
+
+    Returns:
+        처음: 지점 별 코드 가격 관리 페이지 html 렌더링
+    """
+    
+    ## 지점 별 코트 이용금액 조정을 위한 Form 불러오기
+    form = CourtManagementForm()
+    
+    ## 관리자 정보 불러오기
+    user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## 지점 별 코트 가격 관리 DB에서 정보 불러오기
+    court_table = CourtPriceTable.query.filter_by(area=court_area).first()
+    
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == 'POST' and form.validate_on_submit():
+        
+        ## 변경한 가격을 DB에 반영하기
         court_table.price = form.price.data
         db.session.commit()
         flash("수정 완료되었습니다.")
@@ -748,8 +1004,19 @@ def court_price_change_management(admin_phone: str, court_area: str):
 
 @bp.route('/admin/court_management/<admin_phone>/', methods=['GET', 'POST'])
 def court_management(admin_phone: str):
+    """코트 운영 관리 페이지 - 지점 선택 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+
+    Returns:
+        처음: 코트 운영 관리 - 지점 선택 페이지 html 렌더링
+    """
+    
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## 지점 별 코트 정보 불러오기
     court_table = CourtList.query.order_by(CourtList.id).all()
 
     return render_template("admin/court_management.html", user=user, court_table=court_table)
@@ -757,30 +1024,60 @@ def court_management(admin_phone: str):
 
 @bp.route('/admin/court_status_management/<court_area>/<admin_phone>/', methods=['GET', 'POST'])
 def court_status_management(admin_phone: str, court_area: str):
+    """지점 별 코트 운영 관리 페이지 - 코트 선택 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 지점명
+
+    Returns:
+        처음: 지점 별 운영 관리 - 코트 선택 html 렌더링
+    """
+
+    ## 관리자 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
+    
+    ## 코트 운영 관리 DB에서 선택한 코트 상태 불러오기
     court_table = ReservationStatus.query.filter_by(
-        area=court_area).order_by(ReservationStatus.id).all()
+        area=court_area
+    ).order_by(ReservationStatus.id).all()
 
     return render_template("admin/court_status_management.html", user=user, court_table=court_table)
 
 
 @bp.route('/admin/court_onoff/<court_area>/<court_nm>/<admin_phone>/', methods=['GET', 'POST'])
 def court_status_onoff(admin_phone: str, court_area: str, court_nm: str):
+    """코트 운영 On Off 페이지 Backend Code
 
+    Args:
+        admin_phone (str): 관리자 핸드폰 번호
+        court_area (str): 지점명
+        court_nm (str): 선택한 코트
+
+    Returns:
+        처음: 코트 운영 On Off 페이지 html 렌더링
+    """
+
+    ## 코트 On Off 처리를 위한 Form 불러오기
     form = CourtOnOffForm()
 
+    ## 관지라 정보 불러오기
     user = User.query.filter_by(phone=admin_phone).first()
     
+    ## 코트 운영 관리 DB에서 선택한 코트 상태 불러오기
     court_table = ReservationStatus.query.filter_by(
         area=court_area, 
         court_nm=court_nm
     ).first()
 
+    ## POST 요청인 경우 아래 if 문이 실행
     if request.method == "POST" and form.validate_on_submit():
+        
+        ## 선택한 status 반영하기
         court_table.status = form.status.data
         db.session.commit()
 
+        ## 반영 상태에 따라 Flash 메세지로 알리기
         if form.status.data == "1":
             flash("예약 오픈 되었습니다.")
         else:

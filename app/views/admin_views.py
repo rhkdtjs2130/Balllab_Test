@@ -382,13 +382,13 @@ def change_user_info(admin_phone: str, user_phone: str):
     if request.method == 'POST' and form.validate_on_submit():
         
         ## 관리자가 지급한 포인트와 기존에 갖고 있던 포인트 차이 계산
-        diff_point = form.point.data - user.admin_point
+        diff_point = form.admin_point.data - user.admin_point
 
         ## 수정된 데이터를 반영 (수정되지 않은 경우 기본값이 입력됌)
         user.username = form.username.data
         user.phone = form.phone.data
         user.birth = form.birth.data
-        user.admin_point = form.point.data
+        user.admin_point = form.admin_point.data
         db.session.commit()
 
         ## 내용을 수정한 관리자 정보를 불러오기

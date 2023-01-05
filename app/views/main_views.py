@@ -158,7 +158,7 @@ def buy_point(phone:str):
                 'price': price,
                 'recvphone': user.phone,
                 "skip_cstpage": "y",
-                "memo": f"주식회사볼랩_포인트 0",
+                "memo": f"주식회사볼랩_포인트 0 0 0",
                 "var1": date,
                 "var2": time,
             }
@@ -747,7 +747,7 @@ def pay_check():
         user = User.query.filter_by(phone=request.form['recvphone']).first()
 
         ## Point 구입인 경우
-        if request.form['memo'] == f"주식회사볼랩_포인트 0":
+        if request.form['memo'] == f"주식회사볼랩_포인트 0 0 0":
             
             ## payapp에서 보내준 데이터를 처리해서 변수에 할당
             point_price = int(request.form['price'])

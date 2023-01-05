@@ -55,11 +55,14 @@
                             {{ user.username }}
                         </b>
                     </h4>
-                    <h6  style="color: grey">
+                    <h6 style="color: grey">
                         Phone: {{ user.phone }}
                     </h6>
-                    <h6  style="color: grey">
+                    <h6 style="color: grey">
                         Point: {{ user.point }}
+                    </h6>
+                    <h6 style="color: grey">
+                        관리자 지급 Point: {{ user.admin_point }}
                     </h6>
                     <div class="d-grid gap-2 my-2">
                         <a href="{{ url_for('admin.change_user_info', admin_phone=admin.phone, user_phone=user.phone) }}" class="btn btn-success">회원 정보 및 포인트 관리</a>

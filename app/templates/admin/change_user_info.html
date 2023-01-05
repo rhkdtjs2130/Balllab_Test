@@ -21,6 +21,11 @@
                    value="{{ user.birth }}">
         </div>
         <div class="mb-3">
+            <label for="point">Point</label>
+            <input type="text" class="form-control" name="point" id="point"
+                   value="{{ user.point }}" readonly>
+        </div>
+        <div class="mb-3">
             <label for="point">관리자 지급 Point</label>
             <input type="text" class="form-control" name="point" id="point"
                    value="{{ user.admin_point }}">

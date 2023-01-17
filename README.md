@@ -15,6 +15,12 @@ cd balllab_web
 
 ### 환경변수 설정
 [환경변수 설정방법은 이쪽을 참고](https://wikidocs.net/81042)
+``` {bash}
+vim ~/.bashrc
+
+
+
+```
 
 ### Debugging 서버 실행
 ``` {bash}

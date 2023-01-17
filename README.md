@@ -26,10 +26,10 @@ vim ~/.bashrc
 ```
 
 
-vim 사용법 i (입력), esc (입력모드 나가기), :wq! (저장후 나가기)
-맨 아래에 다음 코드를 추가한다.
-FLASK_DEBUG -> 디버깅 모드, 개발 모드
-APP_CONFIG_FILE -> "웹사이트 개발 폴더 내 development.py 경로"
+vim 사용법 i (입력), esc (입력모드 나가기), :wq! (저장후 나가기)   
+맨 아래에 다음 코드를 추가한다.   
+FLASK_DEBUG -> 디버깅 모드, 개발 모드   
+APP_CONFIG_FILE -> "웹사이트 개발 폴더 내 development.py 경로"   
 
 아래 코드는 dev를 터미널에 입력하면 debug 모드 app_config_file 설정, 그리고 가상환경을 키는 코드임 (Linux, Mac)
 

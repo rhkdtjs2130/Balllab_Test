@@ -16,8 +16,9 @@ cd balllab_web
 ### 환경변수 설정
 
 [환경변수(윈도우) 설정 방법은 이쪽을 참고](https://wikidocs.net/81042)
-APP_CONFIG_FILE=/Users/lkh256/Studio/Development/balllab_web/config/development.py 를 추가한다. 
-APP_CONFIG_FILE="웹사이트 개발 폴더 내 development.py 경로"를 위의 링크를 보고 입력하면된다. 
+
+APP_CONFIG_FILE=/Users/lkh256/Studio/Development/balllab_web/config/development.py 를 추가한다.   
+(Caution !!)APP_CONFIG_FILE="본인에게 맞는 웹사이트 개발 폴더 내 development.py 경로"를 위의 링크를 보고 입력하면된다. 
 
 환경변수 설정(Linux)
 ``` {bash}

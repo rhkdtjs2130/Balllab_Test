@@ -2,7 +2,8 @@
 {% block content %}
 
 <div class="container">
-
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 250px;">
     <br>
     <h5 class="my-3 border-bottom pb-2">
         ID: {{ user.phone }}
@@ -11,8 +12,9 @@
         <br>
         보유 LUV: {{ user.point }}
     </h5>
-
+    
     <h5 class="my-1 border-bottom border-top pb-2 pt-2 text-center">
+        <hr/>
         <b style="color: red;">BALLLAB LUV 충전해택!</b><br>
         <b>LUV 충전 시 다양한 혜택이 제공됩니다.</b>
     </h5>
@@ -21,11 +23,20 @@
     <form method="post">
         {{ form.csrf_token }}
         {% include "form_errors.html" %}
-        <h3 class="text-center">
+        <h2 class="text-center">
+            <hr/>
             <b>충 전 금 액</b>
-        </h3>
-        <br>
-
+        </h2>
+        <h5 class="my-1 border-bottom border-top pb-2 pt-2" style="text-align= left">
+            <b style=:"color: #2e2e2e";>환불규정</b>
+                <br>
+                <br>
+            <b style="color:#2e2e2e;">📋 48시간 이전 결제 취소에 한하여 50% 환불</b>
+                <br>    
+            <b style="color:#2e2e2e;">🙏결제 시 일정을 충분히 고려하여 예약해 주세요. 예약 취소는 코트 운영에 큰 부담이 됩니다. 😮‍💨</b>
+                <br>
+            <hr/>
+        </h5>
         <div class="my-2">
             {% for point_table in point_tables %}
                 <div class="form-check mx-auto my-3">

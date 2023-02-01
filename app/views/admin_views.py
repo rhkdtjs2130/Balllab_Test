@@ -1,4 +1,6 @@
-from crypt import methods
+from passlib.hash import md5_crypt as md5
+from passlib.hash import sha256_crypt as sha256
+from passlib.hash import sha512_crypt as sha512
 import urllib
 import ast
 import requests

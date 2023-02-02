@@ -1,7 +1,6 @@
-from locale import currency
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField, EmailField, IntegerField, DateField
-from wtforms.validators import DataRequired, Length, EqualTo, Email
+from wtforms.validators import DataRequired, Length, EqualTo, Email, InputRequired
 
 class UserLoginForm(FlaskForm):
     phone = StringField('사용자이름', validators=[DataRequired("핸드폰 번호를 입력해주세요."), Length(min=11, max=11)])
@@ -85,8 +84,8 @@ class ChangeUserInfoForm(FlaskForm):
     username = StringField('실명', validators=[DataRequired("실명을 입력해주세요."), Length(min=1, max=25)])
     phone = StringField('핸드폰 번호', validators=[DataRequired("핸드폰 번호를 입력해주세요. 010-1234-5678 -> 01012345678"), Length(min=11, max=11)])
     birth = StringField('생년월일 8자리', validators=[DataRequired("생년월일을 입력해주세요. 1995년 2월 25일 -> 19950225"), Length(min=8, max=8)])
-    point = IntegerField("Point", validators=[DataRequired("포인트를 입력해주세요.")])
-    admin_point = IntegerField("Point", validators=[DataRequired("관리자 지급 포인트를 입력해주세요.")])
+    point = IntegerField("Point", validators=[InputRequired("포인트를 입력해주세요.")])
+    admin_point = IntegerField("Point", validators=[InputRequired("관리자 지급 포인트를 입력해주세요.")])
     
 class PointManagementForm(FlaskForm):
     price = IntegerField("Price", validators=[DataRequired("가격")])

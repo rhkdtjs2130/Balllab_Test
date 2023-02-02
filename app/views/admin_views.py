@@ -1,10 +1,12 @@
-from crypt import methods
 import urllib
 import ast
 import requests
 import datetime
 
 from flask import Blueprint, url_for, render_template, request, flash
+from passlib.hash import md5_crypt as md5
+from passlib.hash import sha256_crypt as sha256
+from passlib.hash import sha512_crypt as sha512
 from werkzeug.utils import redirect
 from sqlalchemy import desc
 from time import sleep

@@ -3995,7 +3995,7 @@ fieldset:disabled .btn {
 .dropend,
 .dropstart,
 .dropup {
-    position: relative
+    position: relative;
 }
 
 .dropdown-toggle {
@@ -7605,7 +7605,7 @@ fieldset:disabled .btn {
 }
 
 .overflow-scroll {
-    overflow: scroll !important
+    overflow: scroll !important;
 }
 
 .d-inline {

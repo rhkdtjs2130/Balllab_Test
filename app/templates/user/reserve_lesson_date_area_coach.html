@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container">
+    <br>
+    <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 200px;">
+    <br>
+    <div class="calendar">
+        <div class="calendar_header">
+            <div class="ym-wrapper">
+                <span class="year"></span>년
+                <span class="month"></span>월
+            </div>
+            <div class="header_text">
+                <div class="calendar_nav">
+                    <button class="nav-btn go-prev" onclick="prevMonth()"><b>&lt;</b></button>
+                    <button class="nav-btn go-today" onclick="goToday()"><b>오늘</b></button>
+                    <button class="nav-btn go-next" onclick="nextMonth()"><b>&gt;</b></button>
+                </div>
+                <div class="header_text_mg">
+                    <b>신청수/총 모집수</b>
+                </div>
+            </div>
+        </div>
+        <div class="calendar_main">
+            <div class="days">
+                <div class="day">일</div>
+                <div class="day">월</div>
+                <div class="day">화</div>
+                <div class="day">수</div>
+                <div class="day">목</div>
+                <div class="day">금</div>
+                <div class="day">토</div>
+            </div>
+            <div class="dates"></div>
+        </div>
+    </div>
+    <div class="dropdown_wrap">
+        <div class="dropdown_wrap_2">
+            <div class="dropdown_lesson_div me-3">
+                <b class="dropdown_header_font">레슨횟수</b>
+                <div class="dropdown dropdown_lesson">
+                    <button class="btn btn-secondary dropdown-toggle dropdown_lesson_menu" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    레슨 횟수를 선택해 주세요.
+                    </button>
+                    <div class="dropdown-menu dropdown_lesson_menu" aria-labelledby="dropdownMenu2">
+                    <button class="dropdown-item" type="button">Action</button>
+                    <button class="dropdown-item" type="button">Another action</button>
+                    <button class="dropdown-item" type="button">Something else here</button>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown_lesson_div">
+                <b class="dropdown_header_font">인원</b>
+                <div class="dropdown dropdown_lesson">
+                    <button class="btn btn-secondary dropdown-toggle dropdown_lesson_menu" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    인원수를 선택해 주세요.
+                    </button>
+                    <div class="dropdown-menu dropdown_lesson_menu" aria-labelledby="dropdownMenu2">
+                    <button class="dropdown-item" type="button">Action</button>
+                    <button class="dropdown-item" type="button">Another action</button>
+                    <button class="dropdown-item" type="button">Something else here</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown_wrap_1">
+            <div class="dropdown_lesson_div">
+                <b class="dropdown_header_font">지점</b>
+                <div class="dropdown dropdown_lesson">
+                    <button class="btn btn-secondary dropdown-toggle dropdown_lesson_menu" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    지점을 선택해 주세요.
+                    </button>
+                    <div class="dropdown-menu dropdown_lesson_menu" aria-labelledby="dropdownMenu2">
+                        {% for lesson_price in lesson_prices %}
+                            <button class="dropdown-item" type="button">{{ lesson_price.area }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown_wrap_1">
+            <div class="dropdown_lesson_div">
+                <b class="dropdown_header_font">코치</b>
+                <div class="dropdown dropdown_lesson">
+                    <button class="btn btn-secondary dropdown-toggle dropdown_lesson_menu" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    코치를 선택해 주세요.
+                    </button>
+                    <div class="dropdown-menu dropdown_lesson_menu" aria-labelledby="dropdownMenu2">
+                    {% for lesson_coach in lesson_coaches %}
+                        <button class="dropdown-item" type="button">{{ lesson_coach.coach_name }}</button>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="time_table">
+        <div class="time_table_box time_table_box_mg">
+            <h5 class="timetable_header">오전 Time</h5>
+            <div class="d-grid gap-2 mb-3 ks-overflow-scroll border-bottom" style="height: 900px;" data-bs-spy="scroll">
+                <div class="gap-2 my-3">
+                    {% set half_len = (timetable|length/2)|int %}
+                        {% for i in range(0, half_len) %}
+                        <div class="gap-2 my-1 form-check form-switch form-control-lg">
+                            <div class="d-grid btn btn-outline-sucess btn-lg">
+                                <input type="radio" class="btn-check my-1" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                                <label class="btn btn-outline-secondary" for={{ timetable[i]}}><h5><b>오후 {{ timetable[i] }}</b></h5></button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="time_table_box time_table_box_mg">
+            <h5 class="timetable_header">오후 Time</h5>
+            <div class="d-grid gap-2 mb-3 ks-overflow-scroll border-bottom" style="height: 900px;" data-bs-spy="scroll">
+                <div class="gap-2 my-3">
+                    {% set half_len = (timetable|length/2)|int %}
+                        {% for i in range(half_len, timetable|length) %}
+                        <div class="gap-2 my-1 form-check form-switch form-control-lg">
+                            <div class="d-grid btn btn-outline-sucess btn-lg">
+                                <input type="radio" class="btn-check my-1" name="time" id={{ timetable[i]}} autocomplete="off" value={{ i }}>
+                                <label class="btn btn-outline-secondary" for={{ timetable[i]}}><h5><b>오후 {{ timetable[i] }}</b></h5></button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <form method="post">
+        <div class="d-grid gap-2 my-2 dropdown_wrap">
+            <button type="submit" class="btn btn-primary btn-lg">
+                예약 or 결제하기
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

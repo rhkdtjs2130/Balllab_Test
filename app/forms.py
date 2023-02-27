@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, PasswordField, EmailField, IntegerField, DateField
+from wtforms import StringField, TextAreaField, PasswordField, EmailField, IntegerField, DateField, SelectField
 from wtforms.validators import DataRequired, Length, EqualTo, Email, InputRequired
 
 class UserLoginForm(FlaskForm):
@@ -97,3 +97,10 @@ class CourtManagementForm(FlaskForm):
     
 class CourtOnOffForm(FlaskForm):
     status = StringField("Status")
+
+class ReserveLessonForm(FlaskForm):
+    date = DateField("날짜", validators=[DataRequired("날짜를 선택해주세요.")])
+    lesson = SelectField("레슨횟수", validate_choice=[DataRequired("레슨 횟수를 선택 해주세요.")])
+    area = SelectField("지점명", validate_choice=[DataRequired("지점을 선택해 주세요.")])
+    lesson_coach = SelectField("코치명", validate_choice=[DataRequired("코치를 선택해주세요.")])
+    time = StringField("이용 시간", validators=[DataRequired("이용 시간대를 선택해주세요.")])

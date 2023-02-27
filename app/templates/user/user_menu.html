@@ -21,6 +21,10 @@
             포인트 충전
         </a>
 
+        <a href="{{ url_for('main.reserve_lesson_date_area_lesson_coach', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
+            레슨 예약
+        </a>
+
         <a href="{{ url_for('main.reserve_court_area_date', phone=user.phone) }}" class="btn btn-primary my-1 btn-lg">
             코트 예약
         </a>

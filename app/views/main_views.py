@@ -15,9 +15,9 @@ from time import sleep
 from werkzeug.utils import redirect
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, PointTable, CourtPriceTable, ReservationStatus
+from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, PointTable, CourtPriceTable, ReservationStatus, LessonCoach, LessonPrice, ReservationLesson
 from app import db
-from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm, SendVideoForm
+from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm, SendVideoForm, ReserveLessonForm
 
 bp = Blueprint("main", __name__, url_prefix='/')
 
@@ -1235,3 +1235,14 @@ def send_mail(file_list:list, to_email:str) -> None:
     smpt.quit()
     
     return None
+
+@bp.route("/user_menu/<phone>/reserve_lesson/select_date_area_lesson_coach", methods=('GET', 'POST'))
+def reserve_lesson_date_area_lesson_coach(phone:str):
+    
+    form = ReserveLessonForm()
+    user = User.query.filter_by(phone=phone).first()
+    lesson_coaches = LessonCoach.query.order_by(LessonCoach.coach_name).all()
+    lesson_prices = LessonPrice.objects.order_by('area').distinct('area').values_list('area', flat=True)
+
+
+    return render_template("user/reserve_lesson_date_area_coach.html", user=user, timetable=timetable, lesson_coaches=lesson_coaches, lesson_prices=lesson_prices)

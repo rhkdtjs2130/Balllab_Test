@@ -51,6 +51,9 @@ class DoorOpenForm(FlaskForm):
     area = StringField("Area")
     time = StringField("Time")
 
+class VideoAgreementForm(FlaskForm):
+    agree_4 = StringField('개인정보활용 동의')
+
 class SendVideoForm(FlaskForm):
     area = StringField("Area")
     date = StringField("Date")

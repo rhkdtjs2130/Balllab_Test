@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.models import User, BuyPoint, ReserveCourt, PayDB, DoorStatus, PointTable, CourtPriceTable, ReservationStatus
 from app import db
-from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm, SendVideoForm
+from app.forms import BuyPointForm, ReserveCourtAreaDateForm, ReserveCourtCourtForm, ReserveCourtForm, ReserveCourtTimeForm, DoorOpenForm, ChangePasswordForm, SendVideoForm, VideoAgreementForm
 
 bp = Blueprint("main", __name__, url_prefix='/')
 
@@ -1049,7 +1049,7 @@ def check_video(phone:str):
         처음: 코트 예약 결제 확인 페이지 html 렌더링
     """
     ## 도어락 제어를 위한 Form 불러오기
-    form = SendVideoForm()
+    form = SendVideoForm(), VideoAgreementForm()
     
     ## 현재 시점의 14일 전 날짜 정보 불러오기 (datetime.date)
     date = datetime.date.today() - datetime.timedelta(days=14)
@@ -1063,17 +1063,20 @@ def check_video(phone:str):
         .order_by(ReserveCourt.date)\
         .order_by(ReserveCourt.time)\
         .all()
-        
-    ## Post 요청할 데이터 정리
+
     if request.method == "POST":
-        
+        agree_4 = User.query.filter_by(agreement_option=0).first()
+        if agree_4 is not None:
+            agree_4.agreement_option = 1
+            db.session.commit()
+        return render_template("user/check_video.html", user=user, form=form)  
         ## 요청 시점에 영상 데이터가 있는지 Google Drive에서 검색하고 불러오기
         links = find_generate_video_link(
             court=request.form['area'],
             date=request.form['date'],
             time=request.form['time'],
         )
-        
+
         ## 회원이 선택 약관에 동의한 경우 처리
         if user.agreement_option == 1:
             ## 영상이 없는 경우

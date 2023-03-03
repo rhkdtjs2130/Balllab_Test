@@ -21,12 +21,29 @@
     <br>
     <img src="{{ url_for('static', filename='/logo/logo.png') }}" class="rounded mx-auto d-block" style="width: 150px;">
     <br>
-    <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
-        <b>나의 영상 관리</b>
-    </h5>
-
+    <div>
+        <h3 class="my-1 border-bottom pb-2 pt-2 text-center">
+            <b>나의 영상 관리</b>
+        </h3>
+        <div class="flex-space-evently mg-pd-5">
+            <div class="m-auto">
+                <h5 class="text-center text-color-black">
+                    <b>
+                        ⭐개인정보활용 동의를 선택하지 않으신 회원님께서는 서비스 이용이 불가합니다⭐<br>
+                        이용을 원하시면 우측의 <span style="color: red">"동의"</span> 버튼을 눌러 동의현황을 변경 해주세요.
+                    </b>
+                </h5>
+            </div>
+            <form method="post">
+                <div class="grid-center">
+                    <button type="submit" class="btn btn-success"><b>동의</b></button>
+                    <span>개인정보활용 동의하기</span>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="mx-1">
-        <div class="d-grid gap-2 my-3 overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
+        <div class="d-grid gap-2 my-3 ks-overflow-scroll border-bottom" style="height: 450px"  data-bs-spy="scroll">
             {% if reservation_table|length !=0 %}
                 {% for reservation in reservation_table %}
                     <div class="border p-3 rounded-start bg-light">
